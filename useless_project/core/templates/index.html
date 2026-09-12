@@ -2197,9 +2197,12 @@
                         Dismiss &amp; Try Again
                     </button>
                 </div>
-            </form>
-        </div>
-    </div>
+    <!-- ENTRANCE BGM AUDIO -->
+    <audio id="bgmAudioEl" loop preload="auto">
+        <source src="/static/audio/ramaswami.mp3" type="audio/mpeg">
+        <source src="/static/music_nothing/ramaswami.mp3" type="audio/mpeg">
+        <source src="/static/ramaswami.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
         // ==========================================
@@ -2237,8 +2240,13 @@
         // AUDIO ASSETS & BACKGROUND MUSIC
         // ==========================================
         // 1. Entrance BGM: ramaswami.mp3 — use the HTML <audio> element for better autoplay support
-        const bgmAudio = document.getElementById('bgmAudioEl');
+        let bgmAudio = document.getElementById('bgmAudioEl');
+        if (!bgmAudio) {
+            bgmAudio = new Audio('/static/audio/ramaswami.mp3');
+        }
+        bgmAudio.loop = true;
         bgmAudio.volume = 0.6;
+
         const audioNudge = document.getElementById('audioNudge');
 
         function dismissNudge() {
@@ -2264,8 +2272,10 @@
 
         function startBGM() {
             if (!soundEnabled || isRunning || isCountdownRunning) return;
-            if (!bgmAudio.paused) return; // already playing
+            if (!bgmAudio) return;
             bgmAudio.volume = 0.6;
+            if (!bgmAudio.paused) return; // already playing
+
             const p = bgmAudio.play();
             if (p !== undefined) {
                 p.then(() => {
@@ -2273,18 +2283,21 @@
                 }).catch(() => {
                     // Browser blocked autoplay — wait for ANY gesture then retry
                     const retryBGM = () => {
-                        if (soundEnabled && !isRunning && !isCountdownRunning) {
+                        if (soundEnabled && !isRunning && !isCountdownRunning && bgmAudio && bgmAudio.paused) {
                             bgmAudio.play().then(dismissNudge).catch(() => {});
                         }
                     };
                     document.addEventListener('pointerdown', retryBGM, { once: true });
+                    document.addEventListener('click',       retryBGM, { once: true });
                     document.addEventListener('keydown',     retryBGM, { once: true });
                     document.addEventListener('touchstart',  retryBGM, { once: true });
+                    document.addEventListener('mousemove',   retryBGM, { once: true });
                 });
             }
         }
 
         function stopBGM() {
+            if (!bgmAudio) return;
             try {
                 bgmAudio.pause();
                 // Do NOT reset currentTime — let it resume from same spot
@@ -2292,7 +2305,6 @@
         }
 
         function stopAllAudio() {
-            stopBGM();
             try {
                 sixtySecAudio.pause();
                 sixtySecAudio.currentTime = 0;
@@ -3276,6 +3288,7 @@
             modalScoreValue.textContent = `${finalScore}s`;
             gameOverModal.classList.add('open');
             showFailVideo();
+            if (soundEnabled) startBGM();
 
             // Auto-focus username input after modal animation
             setTimeout(() => {
