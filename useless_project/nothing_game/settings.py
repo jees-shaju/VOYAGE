@@ -78,6 +78,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'nothing_game.wsgi.application'
 ASGI_APPLICATION = 'nothing_game.asgi.application'
 
+# Environment detection
+IS_VERCEL = 'VERCEL' in os.environ or 'VERCEL_ENV' in os.environ
+
 # Support DATABASE_URL / POSTGRES_URL / STORAGE_URL if deployed to Render / Railway / Vercel Neon / Supabase
 db_url = (
     os.environ.get('DATABASE_URL') or 
