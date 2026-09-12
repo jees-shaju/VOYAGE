@@ -78,8 +78,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'nothing_game.wsgi.application'
 ASGI_APPLICATION = 'nothing_game.asgi.application'
 
-# Support DATABASE_URL / POSTGRES_URL if deployed to Render / Railway / Vercel Neon / Supabase
-db_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL') or os.environ.get('POSTGRES_URL_NON_POOLING')
+# Support DATABASE_URL / POSTGRES_URL / STORAGE_URL if deployed to Render / Railway / Vercel Neon / Supabase
+db_url = (
+    os.environ.get('DATABASE_URL') or 
+    os.environ.get('POSTGRES_URL') or 
+    os.environ.get('POSTGRES_URL_NON_POOLING') or 
+    os.environ.get('STORAGE_URL') or 
+    os.environ.get('STORAGE_POSTGRES_URL')
+)
 
 if db_url:
     try:
