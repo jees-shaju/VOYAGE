@@ -69,7 +69,7 @@ For Software:
 
 ### Workflow Diagram
 
-```text
+```
                      ┌─────────────────┐
                      │   Open Website  │
                      └────────┬────────┘
@@ -110,10 +110,15 @@ For Software:
                                                ▼
                                       Leaderboard Update
 
+
+
+```
 ### Project Demo
 # Video
-[Add your demo video link here]
+[https://drive.google.com/file/d/1XykSuwvad7EXLeUh-lYfeubOWlO5QaTH/view?usp=drivesdk]
 *Shows complete gameplay: starting the challenge, surviving the inactivity period, triggering meme jumpscares at milestones, failing, and submitting a score to the Hall of Utter Waste*
+
+
 
 # Additional Demos
 - Live Website: https://voyage-jees2.vercel.app/
