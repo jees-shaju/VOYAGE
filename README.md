@@ -51,19 +51,64 @@ or visit: https://voyage-jees2.vercel.app/
 ### Project Documentation
 For Software:
 
-# Screenshots (Add at least 3)
-![Screenshot1](https://drive.google.com/file/d/1Rkoq5rko6WJvVNSja5MN8VPcCW7iPgXQ/view?usp=drivesdk)
+# Screenshots 
+![Screenshot1]:(https://drive.google.com/file/d/1Rkoq5rko6WJvVNSja5MN8VPcCW7iPgXQ/view?usp=drivesdk)
 *The main game interface showing the strict protocol rules, countdown, timer, and the Start Doing Nothing button*
 
-![Screenshot2](https://drive.google.com/file/d/1-g4lQyAeWwZdwy6RjYFOD4At_w79nmF4/view?usp=drivesdk)
+![Screenshot2]:(https://drive.google.com/file/d/1-g4lQyAeWwZdwy6RjYFOD4At_w79nmF4/view?usp=drivesdk)
 *Level progression milestone screen celebrating the player's remarkable ability to do absolutely nothing*
 
-![Screenshot3](https://drive.google.com/file/d/1GtVrigjhI0I0VMt2Jsyiz8kICRlVENrm/view?usp=drivesdk)
+![Screenshot3]:(https://drive.google.com/file/d/1GtVrigjhI0I0VMt2Jsyiz8kICRlVENrm/view?usp=drivesdk)
 *The Hall of Utter Waste — the global leaderboard ranking the world's greatest time wasters*
 
 # Diagrams
 ![Workflow](Add your workflow/architecture diagram here)
 *Player opens site → clicks Start → 3-second countdown → inactivity monitoring begins → any input triggers FAIL and score submission → no input continues timer through XP milestones, level-ups, and meme pranks → score saved to PostgreSQL leaderboard*
+
+*The workflow shows how the application transitions from the initial countdown to inactivity monitoring, milestone detection, level progression, and score submission.*
+
+### Workflow Diagram
+
+```text
+                     ┌─────────────────┐
+                     │   Open Website  │
+                     └────────┬────────┘
+                              │
+                              ▼
+                     ┌─────────────────┐
+                     │   Start Game    │
+                     └────────┬────────┘
+                              │
+                              ▼
+                     ┌─────────────────┐
+                     │ 3-Sec Countdown │
+                     └────────┬────────┘
+                              │
+                              ▼
+                     ┌─────────────────┐
+                     │  Doing Nothing  │
+                     │     Begins      │
+                     └────────┬────────┘
+                              │
+             ┌────────────────┴────────────────┐
+             │                                 │
+             ▼                                 ▼
+   [ User Activity ]                    [ No Activity ]
+             │                                 │
+             ▼                                 ▼
+       Challenge Ends                   Timer Continues
+             │                                 │
+             ▼                                 ▼
+    Submit Final Score                  Milestone Check
+             │                                 │
+             ▼                                 ▼
+    Hall of Utter Waste                Level Progression
+                                               │
+                                               ▼
+                                        Achievement / XP
+                                               │
+                                               ▼
+                                      Leaderboard Update
 
 ### Project Demo
 # Video
