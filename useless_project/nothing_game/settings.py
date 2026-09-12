@@ -90,6 +90,7 @@ db_url = (
     os.environ.get('STORAGE_POSTGRES_URL')
 )
 
+DATABASES = {}
 db_configured = False
 if db_url:
     try:
@@ -158,7 +159,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'core' / 'static',
-    BASE_DIR / 'music_nothing',
 ]
 # Whitenoise storage for compression and caching
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage' if not DEBUG else 'django.contrib.staticfiles.storage.StaticFilesStorage'
