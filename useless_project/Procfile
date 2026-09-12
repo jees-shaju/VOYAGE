@@ -1,0 +1,1 @@
+web: gunicorn nothing_game.wsgi --log-file -

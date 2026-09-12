@@ -1,0 +1,3594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOTHING — The Ultimate Inaction Simulator</title>
+    <meta name="description" content="A game for the Useless Software Competition where the only objective is to literally do nothing. Don't move. Don't click. Don't breathe.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;0,800;1,400&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0a0c10;
+            --bg-card: rgba(18, 22, 30, 0.85);
+            --bg-card-hover: rgba(28, 34, 46, 0.9);
+            --border-color: rgba(0, 255, 204, 0.2);
+            --border-glow: rgba(0, 255, 204, 0.4);
+            --neon-cyan: #00ffcc;
+            --neon-cyan-dim: rgba(0, 255, 204, 0.15);
+            --neon-red: #ff3366;
+            --neon-red-glow: rgba(255, 51, 102, 0.4);
+            --neon-amber: #ffb703;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #57606a;
+            --font-mono: 'JetBrains Mono', 'Courier New', Courier, monospace;
+            --font-display: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        /* Subtle CRT / Grid Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(0, 255, 204, 0.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            padding: 2.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Header & Branding */
+        header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .badge-entry {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 183, 3, 0.1);
+            color: var(--neon-amber);
+            border: 1px solid rgba(255, 183, 3, 0.3);
+            border-radius: 9999px;
+            padding: 0.35rem 0.9rem;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .badge-entry::before {
+            content: "★";
+        }
+
+        h1.title {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 7vw, 4.5rem);
+            font-weight: 800;
+            letter-spacing: 0.25em;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.4), 0 0 40px rgba(0, 255, 204, 0.2);
+            text-transform: uppercase;
+            margin-left: 0.25em; /* optical balance */
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* Rules Banner */
+        .rules-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem 2rem;
+            width: 100%;
+            max-width: 750px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rules-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 2px;
+            width: 100%;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+        }
+
+        .rules-header {
+            color: var(--neon-cyan);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .rules-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.25rem;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+        }
+
+        .rule-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .rule-item span.icon {
+            color: var(--neon-red);
+            font-weight: bold;
+        }
+
+        /* Arena / Timer Stage */
+        .stage-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            width: 100%;
+            max-width: 750px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            position: relative;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0, 255, 204, 0.02);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stage-card.active {
+            border-color: rgba(0, 255, 204, 0.6);
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.15), inset 0 0 30px rgba(0, 255, 204, 0.05);
+        }
+
+        .stage-card.failed {
+            border-color: var(--neon-red);
+            box-shadow: 0 0 40px var(--neon-red-glow), inset 0 0 30px rgba(255, 51, 102, 0.1);
+            animation: glitch-shake 0.4s ease-in-out;
+        }
+
+        @keyframes glitch-shake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-4px, 2px); }
+            40% { transform: translate(4px, -2px); }
+            60% { transform: translate(-3px, -1px); }
+            80% { transform: translate(3px, 2px); }
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: var(--neon-cyan-dim);
+            color: var(--neon-cyan);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 9999px;
+            padding: 0.45rem 1.25rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            animation: pulse-dot 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.4; }
+        }
+
+        .timer-display {
+            font-size: clamp(3.5rem, 12vw, 6.5rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 25px rgba(0, 255, 204, 0.6), 0 0 60px rgba(0, 255, 204, 0.2);
+            font-variant-numeric: tabular-nums;
+            display: flex;
+            align-items: baseline;
+            gap: 0.25rem;
+            margin: 0.5rem 0;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .timer-display.failed {
+            color: var(--neon-red);
+            text-shadow: 0 0 30px var(--neon-red-glow), 0 0 60px rgba(255, 51, 102, 0.3);
+        }
+
+        .timer-unit {
+            font-size: 0.4em;
+            color: var(--text-secondary);
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
+
+        .stage-hint {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-align: center;
+        }
+
+        /* Start Game Button */
+        .btn-start-game {
+            background: linear-gradient(135deg, #00ffcc 0%, #00b388 100%);
+            color: #06120e;
+            border: none;
+            border-radius: 12px;
+            padding: 1.1rem 2.2rem;
+            font-family: var(--font-mono);
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.4), 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin: 0.5rem 0;
+            position: relative;
+            z-index: 5;
+        }
+
+        .btn-start-game:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 0 40px rgba(0, 255, 204, 0.7), 0 8px 25px rgba(0, 0, 0, 0.6);
+            background: linear-gradient(135deg, #33ffd8 0%, #00cc9b 100%);
+        }
+
+        .btn-start-game:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .btn-start-icon {
+            font-size: 1.2rem;
+        }
+
+        .stage-card.standby {
+            border-color: rgba(255, 183, 3, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .stage-card.standby .status-pill {
+            background: rgba(255, 183, 3, 0.1);
+            color: var(--neon-amber);
+            border-color: rgba(255, 183, 3, 0.3);
+        }
+
+        .stage-card.standby .status-dot {
+            background-color: var(--neon-amber);
+            box-shadow: 0 0 10px var(--neon-amber);
+        }
+
+        /* Sound / Action Controls */
+        .controls-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+            font-family: var(--font-mono);
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Leaderboard Section */
+        .leaderboard-section {
+            width: 100%;
+            max-width: 750px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.75rem 2rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .leaderboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .leaderboard-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            letter-spacing: 0.05em;
+        }
+
+        .leaderboard-badge {
+            background: rgba(0, 255, 204, 0.1);
+            color: var(--neon-cyan);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .leaderboard-table th {
+            text-align: left;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 0.6rem 0.75rem;
+        }
+
+        .leaderboard-table td {
+            padding: 0.8rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+
+        .leaderboard-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .rank-cell {
+            font-weight: 700;
+            width: 60px;
+        }
+
+        .rank-1 { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+        .rank-2 { color: #e0e0e0; text-shadow: 0 0 10px rgba(224, 224, 224, 0.3); }
+        .rank-3 { color: #cd7f32; text-shadow: 0 0 10px rgba(205, 127, 50, 0.3); }
+
+        .time-cell {
+            text-align: right;
+            font-weight: 700;
+            color: var(--neon-cyan);
+        }
+
+        .empty-leaderboard {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Modal Backdrop & Popup */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(5, 7, 10, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+            padding: 1.5rem;
+        }
+
+        .modal-backdrop.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-box {
+            background: #11141c;
+            border: 2px solid var(--neon-red);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            padding: 2.25rem 2rem;
+            box-shadow: 0 0 50px var(--neon-red-glow), 0 20px 40px rgba(0, 0, 0, 0.8);
+            transform: scale(0.92) translateY(10px);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+            text-align: center;
+            user-select: auto;
+        }
+
+        .modal-backdrop.open .modal-box {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-title {
+            color: var(--neon-red);
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px var(--neon-red-glow);
+        }
+
+        .reason-banner {
+            background: rgba(255, 51, 102, 0.1);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: #ff99aa;
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .score-highlight {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .score-highlight-label {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .score-highlight-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--neon-cyan);
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: left;
+        }
+
+        .input-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .text-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+            color: #ffffff;
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .text-input:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #00ffcc, #00b388);
+            color: #06120e;
+            border: none;
+            border-radius: 8px;
+            padding: 0.95rem 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+            text-transform: uppercase;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.6);
+            background: linear-gradient(135deg, #26ffd5, #00cc9b);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        /* Countdown Overlay for Restart */
+        .countdown-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 12, 16, 0.95);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .countdown-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .countdown-num {
+            font-size: 4.5rem;
+            font-weight: 800;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 30px var(--neon-cyan);
+            animation: pop-scale 0.5s ease-out;
+        }
+
+        .countdown-msg {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        @keyframes pop-scale {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Fail Video Box — top of Game Over modal */
+        .fail-video-box {
+            width: 100%;
+            max-width: 280px;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto 1rem auto;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #000;
+            border: 2px solid var(--neon-red);
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.5);
+            display: none; /* shown only on fail */
+        }
+
+        .fail-video-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* ==========================================
+           PUNISHMENT OVERLAY — Fullscreen 300sec.mp4
+           ========================================== */
+        #cookedPunishmentOverlay {
+            padding: 0 !important;
+            pointer-events: none;
+            z-index: 1002; /* above cascade dialogs */
+        }
+
+        #cookedPunishmentOverlay .scary-video-container {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: #000;
+        }
+
+        #cookedPunishmentOverlay .scary-video-container video {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            object-fit: cover !important;
+        }
+
+        /* Scary Pop-up Video Overlay (180s - 190s) */
+        .scary-video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.96);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.2s ease-out;
+            padding: 1.5rem;
+        }
+
+        .scary-video-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: none; /* still no interaction - prevents false game triggers */
+            animation: jumpscare-flash 0.35s ease-in-out;
+        }
+
+        @keyframes jumpscare-flash {
+            0% { filter: brightness(4) contrast(2.5) saturate(2); transform: scale(1.1); }
+            30% { filter: brightness(2) contrast(1.8); }
+            100% { filter: brightness(1) contrast(1) saturate(1); transform: scale(1); }
+        }
+
+        .scary-video-container {
+            width: 100%;
+            max-width: 960px;
+            max-height: 85vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 0 80px rgba(255, 51, 102, 0.9), 0 0 150px rgba(0, 0, 0, 0.98);
+            border: 3px solid var(--neon-red);
+            background: #000;
+        }
+
+        .scary-video-container video {
+            width: 100%;
+            height: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* ==========================================
+           COOKED PC / MEME PRANK (330s - 370s)
+           ========================================== */
+        @keyframes cooked-screen-vibrate {
+            0% { transform: translate(0, 0); }
+            10% { transform: translate(-5px, 3px) rotate(-0.2deg); }
+            20% { transform: translate(5px, -3px) rotate(0.2deg); }
+            30% { transform: translate(-4px, -3px); }
+            40% { transform: translate(4px, 4px) rotate(-0.1deg); }
+            50% { transform: translate(-3px, 2px) rotate(0.1deg); }
+            60% { transform: translate(5px, -2px); }
+            70% { transform: translate(-4px, 4px) rotate(-0.2deg); }
+            80% { transform: translate(3px, -3px) rotate(0.2deg); }
+            90% { transform: translate(-3px, 2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        body.cooked-vibrating {
+            animation: cooked-screen-vibrate 0.08s infinite linear !important;
+            overflow: hidden !important;
+        }
+
+        /* Full Page Glitch Effect on game page elements */
+        body.page-glitch-active .container {
+            animation: page-element-glitch 1.2s infinite steps(2);
+        }
+
+        @keyframes page-element-glitch {
+            0% {
+                filter: none;
+                transform: none;
+            }
+            15% {
+                filter: drop-shadow(-5px 0 #ff0055) drop-shadow(5px 0 #00ffcc) contrast(1.4);
+                transform: skewX(-1.5deg) translateX(4px);
+            }
+            18% {
+                filter: none;
+                transform: none;
+            }
+            35% {
+                filter: invert(0.1) hue-rotate(60deg) brightness(1.25);
+                transform: translateY(-3px);
+            }
+            38% {
+                filter: none;
+                transform: none;
+            }
+            60% {
+                filter: drop-shadow(6px 0 #ff3300) contrast(1.5);
+                transform: skewX(2deg) translateX(-5px);
+            }
+            63% {
+                filter: none;
+                transform: none;
+            }
+            82% {
+                filter: hue-rotate(-90deg) saturate(2);
+                transform: translateX(3px);
+            }
+            85% {
+                filter: none;
+                transform: none;
+            }
+            100% {
+                filter: none;
+                transform: none;
+            }
+        }
+
+        /* Fullscreen Glitch Overlay across the page */
+        .cooked-glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1002;
+            display: none;
+            mix-blend-mode: hard-light;
+        }
+
+        .cooked-glitch-overlay.active {
+            display: block;
+            animation: cooked-glitch-anim 0.25s infinite steps(2);
+        }
+
+        @keyframes cooked-glitch-anim {
+            0% {
+                background: repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 204, 0.08) 0px,
+                    rgba(0, 255, 204, 0.08) 1px,
+                    transparent 2px,
+                    transparent 4px
+                );
+                filter: contrast(1.2) hue-rotate(0deg);
+                opacity: 0.85;
+            }
+            25% {
+                background: repeating-linear-gradient(
+                    0deg,
+                    rgba(255, 0, 80, 0.12) 0px,
+                    rgba(255, 0, 80, 0.12) 2px,
+                    transparent 3px,
+                    transparent 6px
+                );
+                filter: contrast(1.7) brightness(1.3) hue-rotate(90deg);
+                opacity: 1;
+            }
+            50% {
+                background: repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 0, 0, 0.3) 0px,
+                    rgba(0, 0, 0, 0.3) 2px,
+                    transparent 3px,
+                    transparent 5px
+                );
+                filter: contrast(1.1) brightness(0.9);
+                opacity: 0.75;
+            }
+            75% {
+                background: repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 204, 0.15) 0px,
+                    rgba(0, 255, 204, 0.15) 1px,
+                    transparent 2px,
+                    transparent 3px
+                );
+                filter: contrast(2) hue-rotate(-120deg) saturate(2);
+                opacity: 1;
+            }
+            100% {
+                background: repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 204, 0.08) 0px,
+                    rgba(0, 255, 204, 0.08) 1px,
+                    transparent 2px,
+                    transparent 4px
+                );
+                filter: contrast(1.2) hue-rotate(0deg);
+                opacity: 0.85;
+            }
+        }
+
+        /* Fullscreen Prank Overlay with background identical to webpage */
+        .cooked-prank-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                radial-gradient(circle at 50% 30%, rgba(0, 255, 204, 0.04) 0%, transparent 70%),
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02)),
+                var(--bg-base);
+            background-size: 100% 100%, 100% 4px, 6px 100%, 100% 100%;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.15s ease-out;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cooked-prank-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Video completely fills the screen */
+        .cooked-prank-overlay video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover; /* Edge-to-edge full screen coverage without black borders */
+            display: block;
+            z-index: 1;
+        }
+
+        /* Horizontal glitch tearing stripes */
+        .cooked-glitch-tear-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            animation: glitch-tearing-anim 1.2s infinite steps(1);
+        }
+
+        @keyframes glitch-tearing-anim {
+            0% { clip-path: inset(0 0 0 0); transform: translate(0); background: transparent; }
+            12% { clip-path: inset(20% 0 74% 0); transform: translateX(-12px); background: rgba(0, 255, 204, 0.12); }
+            15% { clip-path: inset(0 0 0 0); transform: translate(0); background: transparent; }
+            38% { clip-path: inset(62% 0 28% 0); transform: translateX(16px); background: rgba(255, 0, 80, 0.12); }
+            41% { clip-path: inset(0 0 0 0); transform: translate(0); background: transparent; }
+            68% { clip-path: inset(85% 0 8% 0); transform: translateX(-18px) skewX(-2deg); background: rgba(255, 255, 255, 0.15); }
+            71% { clip-path: inset(0 0 0 0); transform: translate(0); background: transparent; }
+            89% { clip-path: inset(36% 0 54% 0); transform: translateX(14px) skewX(2deg); background: rgba(0, 255, 204, 0.15); }
+            92% { clip-path: inset(0 0 0 0); transform: translate(0); background: transparent; }
+        }
+
+        .cooked-glitch-scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%);
+            background-size: 100% 4px;
+        }
+
+        /* Cascading retro failure dialogs */
+        .cooked-cascade-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1001;
+            overflow: hidden;
+        }
+
+        .retro-error-dialog {
+            position: absolute;
+            width: 300px;
+            background: #c0c0c0;
+            color: #000000;
+            border-top: 2px solid #ffffff;
+            border-left: 2px solid #ffffff;
+            border-right: 2px solid #404040;
+            border-bottom: 2px solid #404040;
+            box-shadow: 4px 4px 18px rgba(0, 0, 0, 0.75);
+            font-family: 'Tahoma', 'Segoe UI', sans-serif;
+            animation: retro-box-pop 0.15s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes retro-box-pop {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .retro-error-titlebar {
+            background: linear-gradient(90deg, #000080, #1084d0);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .retro-error-close {
+            background: #c0c0c0;
+            color: #000000;
+            border-top: 1px solid #ffffff;
+            border-left: 1px solid #ffffff;
+            border-right: 1px solid #000000;
+            border-bottom: 1px solid #000000;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 0 4px;
+            line-height: 12px;
+        }
+
+        .retro-error-body {
+            padding: 12px 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        .retro-error-icon {
+            font-size: 26px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .retro-error-buttons {
+            display: flex;
+            justify-content: center;
+            padding-bottom: 8px;
+        }
+
+        .retro-btn {
+            background: #c0c0c0;
+            border-top: 1px solid #ffffff;
+            border-left: 1px solid #ffffff;
+            border-right: 1px solid #000000;
+            border-bottom: 1px solid #000000;
+            padding: 2px 16px;
+            font-size: 11px;
+            font-family: inherit;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: auto;
+            padding: 2rem 1rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        footer a {
+            color: var(--neon-cyan);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem 1rem;
+                gap: 1.75rem;
+            }
+            .stage-card {
+                padding: 2rem 1rem;
+            }
+            .rules-card {
+                padding: 1rem;
+            }
+            .rules-list {
+                gap: 0.75rem;
+                font-size: 0.75rem;
+            }
+            .modal-box {
+                padding: 1.75rem 1.25rem;
+            }
+        }
+
+        /* ==========================================
+           NEXT LEVEL PRANK POPUP (400s - 440s)
+           ========================================== */
+        .next-level-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .next-level-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .next-level-card {
+            position: relative;
+            width: min(520px, 92vw);
+            background: linear-gradient(145deg, #0a0f1e 0%, #0d1730 40%, #091225 100%);
+            border: 1px solid rgba(255, 215, 0, 0.35);
+            border-radius: 24px;
+            box-shadow:
+                0 0 0 1px rgba(255, 215, 0, 0.12),
+                0 0 60px rgba(255, 215, 0, 0.18),
+                0 0 120px rgba(255, 140, 0, 0.12),
+                0 32px 80px rgba(0,0,0,0.7);
+            padding: 2.5rem 2.25rem 2rem;
+            text-align: center;
+            overflow: hidden;
+            animation: nlcard-enter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes nlcard-enter {
+            0% { transform: scale(0.7) translateY(40px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* Shimmer border sweep */
+        .next-level-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 26px;
+            background: conic-gradient(
+                from var(--shimmer-angle, 0deg),
+                transparent 0deg,
+                rgba(255, 215, 0, 0.6) 60deg,
+                rgba(255, 140, 0, 0.4) 120deg,
+                transparent 180deg
+            );
+            z-index: -1;
+            animation: shimmer-spin 2.8s linear infinite;
+        }
+        @property --shimmer-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+        @keyframes shimmer-spin {
+            to { --shimmer-angle: 360deg; }
+        }
+
+        /* Confetti particles */
+        .nl-confetti-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            border-radius: 24px;
+            z-index: 0;
+        }
+
+        .nl-badge {
+            position: relative;
+            z-index: 1;
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,140,0,0.1));
+            border: 1px solid rgba(255,215,0,0.4);
+            color: #ffd700;
+            font-size: 0.65rem;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            padding: 0.3rem 0.9rem;
+            border-radius: 30px;
+            margin-bottom: 1.1rem;
+        }
+
+        .nl-trophy {
+            position: relative;
+            z-index: 1;
+            font-size: 4.5rem;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            animation: nl-trophy-bounce 1.2s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255,215,0,0.7)) drop-shadow(0 0 40px rgba(255,140,0,0.4));
+        }
+        @keyframes nl-trophy-bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            45% { transform: translateY(-10px) scale(1.08); }
+            65% { transform: translateY(-6px) scale(1.04); }
+        }
+
+        .nl-title {
+            position: relative;
+            z-index: 1;
+            font-family: 'Outfit', 'Inter', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 50%, #ff8c00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            margin-bottom: 0.3rem;
+            animation: nl-title-glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes nl-title-glow {
+            from { filter: brightness(1); }
+            to   { filter: brightness(1.3) drop-shadow(0 0 12px rgba(255,215,0,0.5)); }
+        }
+
+        .nl-subtitle {
+            position: relative;
+            z-index: 1;
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.55);
+            letter-spacing: 0.06em;
+            margin-bottom: 1.6rem;
+        }
+
+        .nl-level-banner {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(90deg, rgba(255,215,0,0.08), rgba(255,140,0,0.12), rgba(255,215,0,0.08));
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nl-level-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .nl-level-info {
+            text-align: left;
+        }
+
+        .nl-level-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #ffd700;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .nl-level-desc {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.45);
+            margin-top: 0.15rem;
+        }
+
+        .nl-stars {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .nl-star {
+            font-size: 1.8rem;
+            opacity: 0;
+            animation: nl-star-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .nl-star:nth-child(1) { animation-delay: 0.1s; }
+        .nl-star:nth-child(2) { animation-delay: 0.25s; }
+        .nl-star:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes nl-star-pop {
+            0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        /* Auto-advance progress bar */
+        .nl-progress-wrap {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 1.4rem;
+        }
+        .nl-progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 0.4rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .nl-progress-track {
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .nl-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+            border-radius: 99px;
+            box-shadow: 0 0 8px rgba(255,215,0,0.6);
+            transition: width linear;
+        }
+
+        /* CTA button */
+        .nl-cta-btn {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #ffd700 0%, #ff9500 100%);
+            color: #0a0f1e;
+            font-family: 'Outfit', 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255,215,0,0.4), 0 8px 24px rgba(0,0,0,0.5);
+            animation: nl-btn-pulse 1.8s ease-in-out infinite;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        @keyframes nl-btn-pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.35), 0 8px 24px rgba(0,0,0,0.5); }
+            50% { box-shadow: 0 0 45px rgba(255,215,0,0.7), 0 0 80px rgba(255,140,0,0.3), 0 8px 24px rgba(0,0,0,0.5); }
+        }
+        .nl-cta-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 60px rgba(255,215,0,0.8), 0 12px 32px rgba(0,0,0,0.6);
+        }
+
+        .nl-auto-text {
+            position: relative;
+            z-index: 1;
+            font-size: 0.68rem;
+            color: rgba(255,255,255,0.3);
+            margin-top: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .nl-auto-text span {
+            color: rgba(255,215,0,0.5);
+            font-weight: 700;
+        }
+
+        /* ==========================================
+           LEVEL 3 PRANK POPUP (500s - 540s)
+           ========================================== */
+        .lv3-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .lv3-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .lv3-card {
+            position: relative;
+            width: min(560px, 94vw);
+            background: linear-gradient(155deg, #060d1f 0%, #0c1a3a 35%, #0a1230 70%, #050b1c 100%);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 28px;
+            box-shadow:
+                0 0 0 1px rgba(0, 255, 204, 0.08),
+                0 0 80px rgba(0, 255, 204, 0.15),
+                0 0 160px rgba(0, 200, 160, 0.08),
+                0 40px 100px rgba(0, 0, 0, 0.75);
+            padding: 2.75rem 2.5rem 2.25rem;
+            text-align: center;
+            overflow: hidden;
+            animation: lv3-card-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes lv3-card-enter {
+            0% { transform: scale(0.6) translateY(50px) rotate(-1deg); opacity: 0; }
+            100% { transform: scale(1) translateY(0) rotate(0); opacity: 1; }
+        }
+
+        /* Rotating conic border glow */
+        .lv3-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 30px;
+            background: conic-gradient(
+                from var(--lv3-angle, 0deg),
+                transparent 0deg,
+                rgba(0, 255, 204, 0.5) 40deg,
+                rgba(56, 189, 248, 0.4) 100deg,
+                rgba(168, 85, 247, 0.3) 160deg,
+                transparent 220deg
+            );
+            z-index: -1;
+            animation: lv3-border-spin 3.5s linear infinite;
+        }
+        @property --lv3-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+        @keyframes lv3-border-spin {
+            to { --lv3-angle: 360deg; }
+        }
+
+        /* Floating particles canvas */
+        .lv3-particles-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            border-radius: 28px;
+            z-index: 0;
+        }
+
+        .lv3-system-badge {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: rgba(0, 255, 204, 0.08);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            color: var(--neon-cyan);
+            font-size: 0.6rem;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            margin-bottom: 1.2rem;
+        }
+
+        .lv3-system-badge .lv3-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 8px var(--neon-cyan);
+            animation: pulse-dot 1.2s infinite;
+        }
+
+        .lv3-icon-row {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .lv3-check-icon {
+            font-size: 3.2rem;
+            animation: lv3-check-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            filter: drop-shadow(0 0 16px rgba(0, 255, 204, 0.7));
+        }
+        @keyframes lv3-check-pop {
+            0% { transform: scale(0) rotate(-90deg); opacity: 0; }
+            60% { transform: scale(1.25) rotate(10deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        .lv3-heading {
+            position: relative;
+            z-index: 1;
+            font-family: 'Space Grotesk', 'Outfit', sans-serif;
+            font-size: 1.85rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            background: linear-gradient(135deg, #00ffcc 0%, #38bdf8 40%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.2rem;
+        }
+
+        .lv3-sub {
+            position: relative;
+            z-index: 1;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 0.04em;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Achievements row */
+        .lv3-achievements {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 0.65rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.4rem;
+        }
+
+        .lv3-achieve-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.4rem 0.7rem;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.7);
+            opacity: 0;
+            animation: lv3-chip-in 0.35s ease forwards;
+        }
+        .lv3-achieve-chip:nth-child(1) { animation-delay: 0.2s; }
+        .lv3-achieve-chip:nth-child(2) { animation-delay: 0.4s; }
+        .lv3-achieve-chip:nth-child(3) { animation-delay: 0.6s; }
+        @keyframes lv3-chip-in {
+            0% { transform: translateY(8px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        /* XP bar */
+        .lv3-xp-section {
+            position: relative;
+            z-index: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(0,255,204,0.15);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.3rem;
+            text-align: left;
+        }
+
+        .lv3-xp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .lv3-xp-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .lv3-xp-amount {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.5);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .lv3-xp-track {
+            height: 8px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .lv3-xp-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00ffcc, #38bdf8, #a855f7);
+            border-radius: 99px;
+            box-shadow: 0 0 12px rgba(0, 255, 204, 0.5);
+            transition: width 2s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* Level info strip */
+        .lv3-level-strip {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: linear-gradient(90deg, rgba(0,255,204,0.06), rgba(56,189,248,0.08), rgba(168,85,247,0.06));
+            border: 1px solid rgba(0,255,204,0.15);
+            border-radius: 14px;
+            padding: 0.9rem 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .lv3-level-num {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #00ffcc 0%, #38bdf8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #060d1f;
+            flex-shrink: 0;
+            box-shadow: 0 0 16px rgba(0,255,204,0.4);
+        }
+
+        .lv3-level-meta {
+            text-align: left;
+        }
+
+        .lv3-level-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .lv3-level-tagline {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.4);
+            margin-top: 0.1rem;
+        }
+
+        /* Loading spinner + text */
+        .lv3-loading-row {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.7rem;
+            margin-bottom: 1.3rem;
+        }
+
+        .lv3-spinner {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(0,255,204,0.2);
+            border-top-color: var(--neon-cyan);
+            border-radius: 50%;
+            animation: lv3-spin 0.8s linear infinite;
+        }
+        @keyframes lv3-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .lv3-loading-text {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.45);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.04em;
+        }
+
+        /* CTA button */
+        .lv3-cta-btn {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            padding: 1.05rem 1.5rem;
+            background: linear-gradient(135deg, #00ffcc 0%, #38bdf8 50%, #a855f7 100%);
+            color: #060d1f;
+            font-family: 'Space Grotesk', 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.35), 0 8px 24px rgba(0, 0, 0, 0.5);
+            animation: lv3-btn-glow 2s ease-in-out infinite;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        @keyframes lv3-btn-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0,255,204,0.3), 0 8px 24px rgba(0,0,0,0.5); }
+            50% { box-shadow: 0 0 50px rgba(0,255,204,0.6), 0 0 90px rgba(56,189,248,0.25), 0 8px 24px rgba(0,0,0,0.5); }
+        }
+        .lv3-cta-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 60px rgba(0,255,204,0.7), 0 12px 32px rgba(0,0,0,0.6);
+        }
+
+        .lv3-skip-text {
+            position: relative;
+            z-index: 1;
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.25);
+            margin-top: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ==========================================
+           GOLDEN BALL PRANK (35s - 45s)
+           ========================================== */
+        .gold-ball-container {
+            position: fixed;
+            z-index: 1050;
+            top: 30%;
+            left: 20%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 20px;
+            background: radial-gradient(circle at center, rgba(35, 25, 5, 0.92) 0%, rgba(12, 10, 2, 0.96) 100%);
+            border: 2px solid rgba(255, 215, 0, 0.75);
+            border-radius: 28px;
+            box-shadow: 0 0 35px rgba(255, 215, 0, 0.5), 0 0 70px rgba(255, 140, 0, 0.3), inset 0 0 20px rgba(255, 215, 0, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            cursor: pointer;
+            pointer-events: auto;
+            user-select: none;
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, -50%) scale(0.6);
+            transition: opacity 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), visibility 0.4s;
+        }
+
+        .gold-ball-container.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+            animation: gb-float-pulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes gb-float-pulse {
+            0% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.4), 0 0 60px rgba(255, 140, 0, 0.2); }
+            100% { box-shadow: 0 0 55px rgba(255, 215, 0, 0.85), 0 0 100px rgba(255, 140, 0, 0.5); }
+        }
+
+        .gold-ball-badge {
+            font-family: 'Space Grotesk', 'Outfit', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            color: #ffd700;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .gold-ball-sphere-wrapper {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px 0;
+        }
+
+        .gold-ball-sphere {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 32%, #ffffff 0%, #fff494 20%, #ffd700 50%, #ff8c00 80%, #994d00 100%);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.9), inset -4px -4px 10px rgba(0, 0, 0, 0.5), inset 4px 4px 10px rgba(255, 255, 255, 0.8);
+            position: relative;
+            animation: gb-sphere-rotate 3s linear infinite;
+        }
+
+        @keyframes gb-sphere-rotate {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.06); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .gold-ball-ring {
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 215, 0, 0.75);
+            animation: gb-ring-spin 4s linear infinite;
+        }
+
+        @keyframes gb-ring-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .gold-ball-reward-text {
+            font-family: 'Space Grotesk', 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 0.05em;
+            background: linear-gradient(90deg, #ffd700, #ffaa00, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        .gold-ball-timer-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .gold-ball-timer-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #ff4466;
+            letter-spacing: 0.08em;
+            text-shadow: 0 0 8px rgba(255, 68, 102, 0.6);
+        }
+
+        .gold-ball-progress-bar {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .gold-ball-progress-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ff4466, #ffd700);
+            border-radius: 99px;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+            transition: width 0.05s linear;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Tap-to-enable audio nudge (auto-hides once audio is playing) -->
+    <div id="audioNudge" style="
+        position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%);
+        background: rgba(0,255,204,0.12); border: 1px solid rgba(0,255,204,0.35);
+        color: #00ffcc; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+        padding: 0.45rem 1.1rem; border-radius: 30px; z-index: 200;
+        letter-spacing: 0.08em; opacity: 0.9; pointer-events: none;
+        animation: nudge-pulse 2s ease-in-out infinite;
+    ">🔊 Click anywhere to enable audio</div>
+
+    <!-- BGM: ramaswami.mp3 — autoplay loop, hidden -->
+    <audio id="bgmAudioEl" loop preload="auto" style="display:none">
+        <source src="/static/audio/ramaswami.mp3" type="audio/mpeg">
+        <source src="/static/ramaswami.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="badge-entry">Useless Software Competition Entry</div>
+            <h1 class="title">NOTHING</h1>
+            <p class="subtitle">The definitive high-stakes test of human inaction.</p>
+        </header>
+
+        <!-- Rules Header -->
+        <div class="rules-card" id="rulesCard">
+            <div class="rules-header">
+                <span>⚠ Strict Protocol Rules</span>
+            </div>
+            <div class="rules-list">
+                <div class="rule-item"><span class="icon">✕</span> Do not move mouse</div>
+                <div class="rule-item"><span class="icon">✕</span> Do not press keys</div>
+                <div class="rule-item"><span class="icon">✕</span> Do not click</div>
+                <div class="rule-item"><span class="icon">✕</span> Do not switch tabs</div>
+                <div class="rule-item"><span class="icon">✕</span> Do not scroll</div>
+            </div>
+        </div>
+
+        <!-- Stage / Live Game Area -->
+        <div class="stage-card standby" id="stageCard">
+            <!-- Countdown overlay for smooth resets -->
+            <div class="countdown-overlay" id="countdownOverlay">
+                <div class="countdown-num" id="countdownNum">3</div>
+                <div class="countdown-msg">Prepare to do nothing...</div>
+            </div>
+
+            <div class="status-pill" id="statusPill">
+                <span class="status-dot"></span>
+                <span id="statusText">Ready to Begin</span>
+            </div>
+
+            <div class="timer-display" id="timerDisplay" aria-live="polite">
+                <span id="timerValue">0.00</span>
+                <span class="timer-unit">s</span>
+            </div>
+
+            <!-- Start Game Button -->
+            <button class="btn-start-game" id="startGameBtn" aria-label="Start Game" onclick="initiateCountdown()">
+                <span class="btn-start-icon">▶</span> START DOING NOTHING
+            </button>
+
+            <p class="stage-hint" id="stageHint">
+                Click "Start Doing Nothing" when you are ready. A 3-second countdown will give you time to freeze.
+            </p>
+
+            <div class="controls-row">
+                <button class="icon-btn" id="audioToggleBtn" title="Toggle audio effects" aria-label="Toggle Sound">
+                    <span id="audioIcon">🔊</span> <span id="audioLabel">Sound ON</span>
+                </button>
+                <button class="icon-btn" id="forceRestartBtn" title="Manual reset" aria-label="Restart Game" style="display: none;">
+                    <span>↺</span> <span>Restart</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Leaderboard Section -->
+        <section class="leaderboard-section" id="leaderboardSection">
+            <div class="leaderboard-header">
+                <div class="leaderboard-title">
+                    <span>🏆</span>
+                    <span>Hall of Utter Waste</span>
+                </div>
+                <span class="leaderboard-badge">Top 10 Legends</span>
+            </div>
+
+            <table class="leaderboard-table" id="leaderboardTable">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Rank</th>
+                        <th>Nickname</th>
+                        <th style="text-align: right;">Time Wasted</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                    <tr>
+                        <td colspan="3" class="empty-leaderboard">Loading the masters of inaction...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <footer>
+            <span>Crafted with zero effort for the Useless Software League. &copy; 2026 NOTHING Inc.</span>
+        </footer>
+    </div>
+
+    <!-- SCARY POP-UP VIDEO OVERLAY (180s - 190s) -->
+    <div class="scary-video-overlay" id="scaryVideoOverlay" aria-hidden="true">
+        <div class="scary-video-container">
+            <video id="jumpscareVideo180" playsinline preload="auto">
+                <source src="/static/180secs.mp4" type="video/mp4">
+                <source src="/static/music_nothing/180secs.mp4" type="video/mp4">
+                <source src="/static/audio/180secs.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <!-- SCARY POP-UP VIDEO OVERLAY (302s) - Plays random.mp4 -->
+    <div class="scary-video-overlay" id="scaryVideoOverlay300" aria-hidden="true">
+        <div class="scary-video-container">
+            <video id="jumpscareVideo300" playsinline preload="auto">
+                <source src="/static/random.mp4" type="video/mp4">
+                <source src="/static/music_nothing/random.mp4" type="video/mp4">
+                <source src="/static/audio/random.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <!-- PRANK PUNISHMENT JUMPSCARE - Plays 300sec.mp4 when player touches anything during spamming_meme prank -->
+    <div class="scary-video-overlay" id="cookedPunishmentOverlay" aria-hidden="true">
+        <div class="scary-video-container">
+            <video id="cookedPunishmentVideo" playsinline preload="auto">
+                <source src="/static/300sec.mp4" type="video/mp4">
+                <source src="/static/music_nothing/300sec.mp4" type="video/mp4">
+                <source src="/static/audio/300sec.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <!-- COOKED PC / SPAMMING MEME PRANK OVERLAY (330s - 370s) -->
+    <div class="cooked-glitch-overlay" id="cookedGlitchOverlay" aria-hidden="true"></div>
+    <div class="cooked-prank-overlay" id="cookedPrankOverlay330" aria-hidden="true">
+        <video id="spammingMemeVideo" playsinline preload="auto" loop>
+            <source src="/static/spamming_meme.mp4" type="video/mp4">
+            <source src="/static/music_nothing/spamming_meme.mp4" type="video/mp4">
+            <source src="/static/audio/spamming_meme.mp4" type="video/mp4">
+        </video>
+        <div class="cooked-glitch-scanlines"></div>
+        <div class="cooked-glitch-tear-layer"></div>
+    </div>
+    <div class="cooked-cascade-container" id="cookedCascadeContainer"></div>
+
+    <!-- NEXT LEVEL PRANK POPUP (400s - 440s) — baits player into clicking -->
+    <div class="next-level-backdrop" id="nextLevelBackdrop" aria-hidden="true">
+        <div class="next-level-card" id="nextLevelCard">
+            <canvas class="nl-confetti-canvas" id="nlConfettiCanvas"></canvas>
+
+            <div class="nl-badge">⚡ MILESTONE REACHED</div>
+
+            <div class="nl-trophy">🏆</div>
+
+            <div class="nl-title">CONGRATULATIONS!</div>
+            <div class="nl-subtitle">You have conquered Level 1 — The Art of Doing Nothing</div>
+
+            <div class="nl-level-banner">
+                <div class="nl-level-icon">🚀</div>
+                <div class="nl-level-info">
+                    <div class="nl-level-name">Level 2: The Deeper Void</div>
+                    <div class="nl-level-desc">New challenges. Longer endurance. Legendary status awaits.</div>
+                </div>
+            </div>
+
+            <div class="nl-stars">
+                <div class="nl-star">⭐</div>
+                <div class="nl-star">⭐</div>
+                <div class="nl-star">⭐</div>
+            </div>
+
+            <div class="nl-progress-wrap">
+                <div class="nl-progress-label">
+                    <span>Auto-advancing to Level 2...</span>
+                    <span id="nlCountdownLabel">10s</span>
+                </div>
+                <div class="nl-progress-track">
+                    <div class="nl-progress-fill" id="nlProgressFill"></div>
+                </div>
+            </div>
+
+            <button class="nl-cta-btn" id="nlCtaBtn" type="button">
+                CONTINUE TO LEVEL 2 &nbsp;›
+            </button>
+
+            <div class="nl-auto-text">Or wait <span id="nlAutoSec">10</span>s and the next level begins automatically</div>
+        </div>
+    </div>
+
+    <!-- LEVEL 3 PRANK POPUP (500s - 540s) — ultra-convincing second level-up bait -->
+    <div class="lv3-backdrop" id="lv3Backdrop" aria-hidden="true">
+        <div class="lv3-card" id="lv3Card">
+            <canvas class="lv3-particles-canvas" id="lv3ParticlesCanvas"></canvas>
+
+            <div class="lv3-system-badge">
+                <span class="lv3-dot"></span>
+                SYSTEM — LEVEL PROGRESSION
+            </div>
+
+            <div class="lv3-icon-row">
+                <div class="lv3-check-icon">✅</div>
+            </div>
+
+            <div class="lv3-heading">LEVEL 2 COMPLETE!</div>
+            <div class="lv3-sub">Outstanding performance. You've mastered the art of advanced nothingness.</div>
+
+            <div class="lv3-achievements">
+                <div class="lv3-achieve-chip">🏅 Void Walker</div>
+                <div class="lv3-achieve-chip">💎 Diamond Patience</div>
+                <div class="lv3-achieve-chip">🔥 500s Survivor</div>
+            </div>
+
+            <div class="lv3-xp-section">
+                <div class="lv3-xp-header">
+                    <span class="lv3-xp-title">XP Earned</span>
+                    <span class="lv3-xp-amount" id="lv3XpAmount">0 / 2,500 XP</span>
+                </div>
+                <div class="lv3-xp-track">
+                    <div class="lv3-xp-fill" id="lv3XpFill"></div>
+                </div>
+            </div>
+
+            <div class="lv3-level-strip">
+                <div class="lv3-level-num">3</div>
+                <div class="lv3-level-meta">
+                    <div class="lv3-level-name">Level 3: The Eternal Stillness</div>
+                    <div class="lv3-level-tagline">Only 0.1% of players reach this stage. Prove your worth.</div>
+                </div>
+            </div>
+
+            <div class="lv3-loading-row">
+                <div class="lv3-spinner"></div>
+                <span class="lv3-loading-text" id="lv3LoadingText">Initializing Level 3 environment...</span>
+            </div>
+
+            <button class="lv3-cta-btn" id="lv3CtaBtn" type="button">
+                ENTER LEVEL 3 &nbsp;→
+            </button>
+
+            <div class="lv3-skip-text">Level 3 will load automatically. Click to skip loading.</div>
+        </div>
+    </div>
+
+    <!-- GOLDEN BALL EXTRA TIME PRANK (35s - 45s) -->
+    <div class="gold-ball-container" id="goldBallContainer" aria-hidden="true">
+        <div class="gold-ball-badge">✨ BONUS EVENT ✨</div>
+        <div class="gold-ball-sphere-wrapper">
+            <div class="gold-ball-ring"></div>
+            <div class="gold-ball-sphere"></div>
+        </div>
+        <div class="gold-ball-reward-text">GOLD BALL: +30s EXTRA TIME!</div>
+        <div class="gold-ball-timer-row">
+            <div class="gold-ball-timer-text" id="gbTimerText">10.0s</div>
+            <div class="gold-ball-progress-bar">
+                <div class="gold-ball-progress-fill" id="gbProgressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div class="modal-backdrop" id="gameOverModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box">
+            <div class="modal-title" id="modalTitle">GAME OVER</div>
+
+            <!-- Fail video square box (top of modal) -->
+            <div class="fail-video-box" id="failVideoBox">
+                <video id="failVideo" playsinline>
+                    <source src="/static/audio/fail.mp4" type="video/mp4">
+                    <source src="/static/fail.mp4" type="video/mp4">
+                </video>
+            </div>
+
+            <div class="reason-banner" id="failureReason">
+                Reason: You moved your cursor!
+            </div>
+
+            <div class="score-highlight">
+                <div class="score-highlight-label">Total Time Wasted</div>
+                <div class="score-highlight-value" id="modalScoreValue">0.00s</div>
+            </div>
+
+            <form id="scoreForm" onsubmit="event.preventDefault(); submitScore();">
+                <div class="input-group">
+                    <label class="input-label" for="usernameInput">Enter Your Nickname (Max 30 chars):</label>
+                    <input 
+                        type="text" 
+                        id="usernameInput" 
+                        class="text-input" 
+                        maxlength="30" 
+                        placeholder="Anonymous Idler" 
+                        autocomplete="off"
+                    />
+                </div>
+
+                <div class="modal-actions" style="margin-top: 1.25rem;">
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        Submit Score
+                    </button>
+                    <button type="button" class="btn-secondary" id="cancelBtn" onclick="closeModalAndStandby()">
+                        Dismiss &amp; Try Again
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // GAME STATE & CONFIGURATION
+        // ==========================================
+        let startTime = null;
+        let elapsedSeconds = 0.00;
+        let animationFrameId = null;
+        let isRunning = false;
+        let isModalOpen = false;
+        let soundEnabled = true;
+
+        // Mouse calibration to avoid false triggers on immediate focus/render
+        let initialMousePos = null;
+        let gracePeriodActive = true;
+        let graceTimer = null;
+
+        // Audio synthesizer using Web Audio API (No external assets required!)
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // ==========================================
+        // AUDIO ASSETS & BACKGROUND MUSIC
+        // ==========================================
+        // 1. Entrance BGM: ramaswami.mp3 — use the HTML <audio> element for better autoplay support
+        const bgmAudio = document.getElementById('bgmAudioEl');
+        bgmAudio.volume = 0.6;
+        const audioNudge = document.getElementById('audioNudge');
+
+        function dismissNudge() {
+            if (audioNudge) {
+                audioNudge.style.transition = 'opacity 0.5s';
+                audioNudge.style.opacity = '0';
+                setTimeout(() => audioNudge.remove(), 500);
+            }
+        }
+
+        // 2. 60-Second Milestone: after_60sec.mp3
+        const sixtySecAudio = new Audio('/static/audio/after_60sec.mp3');
+        sixtySecAudio.volume = 0.85;
+        let hasPlayed60SecAudio = false;
+
+        // 3. Custom UI Audio Assets (looks for files placed in /static/audio/ or static root)
+        const customAudio = {
+            fail: new Audio('/static/audio/fail.mp3'),
+            start: new Audio('/static/audio/start.mp3'),
+            submit: new Audio('/static/audio/submit.mp3'),
+            beep: new Audio('/static/audio/beep.mp3'),
+        };
+
+        function startBGM() {
+            if (!soundEnabled || isRunning || isCountdownRunning) return;
+            if (!bgmAudio.paused) return; // already playing
+            bgmAudio.volume = 0.6;
+            const p = bgmAudio.play();
+            if (p !== undefined) {
+                p.then(() => {
+                    dismissNudge(); // audio is playing — hide the nudge
+                }).catch(() => {
+                    // Browser blocked autoplay — wait for ANY gesture then retry
+                    const retryBGM = () => {
+                        if (soundEnabled && !isRunning && !isCountdownRunning) {
+                            bgmAudio.play().then(dismissNudge).catch(() => {});
+                        }
+                    };
+                    document.addEventListener('pointerdown', retryBGM, { once: true });
+                    document.addEventListener('keydown',     retryBGM, { once: true });
+                    document.addEventListener('touchstart',  retryBGM, { once: true });
+                });
+            }
+        }
+
+        function stopBGM() {
+            try {
+                bgmAudio.pause();
+                // Do NOT reset currentTime — let it resume from same spot
+            } catch (e) {}
+        }
+
+        function stopAllAudio() {
+            stopBGM();
+            try {
+                sixtySecAudio.pause();
+                sixtySecAudio.currentTime = 0;
+            } catch (e) {}
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+
+            // Attempt to play custom audio file from /static/audio/
+            if (customAudio[type]) {
+                customAudio[type].currentTime = 0;
+                const playPromise = customAudio[type].play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // Fallback to synthesized audio if custom file isn't present
+                        playSynthesizedSound(type);
+                    });
+                    return;
+                }
+            }
+
+            playSynthesizedSound(type);
+        }
+
+        function playSynthesizedSound(type) {
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+
+                if (type === 'fail') {
+                    // Dramatic low buzzer glitch tone
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, now);
+                    osc.frequency.exponentialRampToValueAtTime(45, now + 0.35);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'beep') {
+                    // High crisp beep for restart countdown
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(660, now);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } else if (type === 'start') {
+                    // Start chord
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(880, now);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'submit') {
+                    // Success chime
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                }
+            } catch (err) {
+                console.warn('Audio playback error:', err);
+            }
+        }
+
+        // ==========================================
+        // UI ELEMENTS
+        // ==========================================
+        const stageCard = document.getElementById('stageCard');
+        const timerValue = document.getElementById('timerValue');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const statusText = document.getElementById('statusText');
+        const stageHint = document.getElementById('stageHint');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const failureReasonEl = document.getElementById('failureReason');
+        const modalScoreValue = document.getElementById('modalScoreValue');
+        const usernameInput = document.getElementById('usernameInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const countdownOverlay = document.getElementById('countdownOverlay');
+        const countdownNum = document.getElementById('countdownNum');
+        const audioToggleBtn = document.getElementById('audioToggleBtn');
+        const audioIcon = document.getElementById('audioIcon');
+        const audioLabel = document.getElementById('audioLabel');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const forceRestartBtn = document.getElementById('forceRestartBtn');
+        const scaryVideoOverlay = document.getElementById('scaryVideoOverlay');
+        const jumpscareVideo180 = document.getElementById('jumpscareVideo180');
+        const scaryVideoOverlay300 = document.getElementById('scaryVideoOverlay300');
+        const jumpscareVideo300 = document.getElementById('jumpscareVideo300');
+        const cookedPrankOverlay330 = document.getElementById('cookedPrankOverlay330');
+        const cookedGlitchOverlay = document.getElementById('cookedGlitchOverlay');
+        const spammingMemeVideo = document.getElementById('spammingMemeVideo');
+        const cookedCascadeContainer = document.getElementById('cookedCascadeContainer');
+        const cookedPunishmentOverlay = document.getElementById('cookedPunishmentOverlay');
+        const cookedPunishmentVideo = document.getElementById('cookedPunishmentVideo');
+        const failVideoBox = document.getElementById('failVideoBox');
+        const failVideo = document.getElementById('failVideo');
+        let isCountdownRunning = false;
+        let hasTriggered180Video = false;
+        let hasFinished180Video = false;
+        let hasTriggered300Video = false;
+        let hasFinished300Video = false;
+        let hasTriggered330Prank = false;
+        let hasFinished330Prank = false;
+        let cookedCascadeInterval = null;
+        let isPunishmentActive = false;
+        let hasTriggeredNextLevel = false;
+        let hasFinishedNextLevel = false;
+        let nlCountdownTimer = null;
+        let nlRafId = null;
+        const nextLevelBackdrop = document.getElementById('nextLevelBackdrop');
+        const nlProgressFill = document.getElementById('nlProgressFill');
+        const nlCountdownLabel = document.getElementById('nlCountdownLabel');
+        const nlAutoSec = document.getElementById('nlAutoSec');
+        const nlCtaBtn = document.getElementById('nlCtaBtn');
+        const nlConfettiCanvas = document.getElementById('nlConfettiCanvas');
+
+        // Level 3 prank state
+        let hasTriggeredLv3 = false;
+        let hasFinishedLv3 = false;
+        let lv3RafId = null;
+        let lv3ParticlesArr = [];
+        const lv3Backdrop = document.getElementById('lv3Backdrop');
+        const lv3Card = document.getElementById('lv3Card');
+        const lv3ParticlesCanvas = document.getElementById('lv3ParticlesCanvas');
+        const lv3XpFill = document.getElementById('lv3XpFill');
+        const lv3XpAmount = document.getElementById('lv3XpAmount');
+        const lv3CtaBtn = document.getElementById('lv3CtaBtn');
+        const lv3LoadingText = document.getElementById('lv3LoadingText');
+
+        // Golden Ball Prank state (35s - 45s)
+        let hasTriggeredGoldBall = false;
+        let hasFinishedGoldBall = false;
+        let gbRafId = null;
+        let gbStartTime = 0;
+        const goldBallContainer = document.getElementById('goldBallContainer');
+        const gbTimerText = document.getElementById('gbTimerText');
+        const gbProgressFill = document.getElementById('gbProgressFill');
+
+        // ==========================================
+        // FAIL VIDEO CONTROLS
+        // ==========================================
+        function showFailVideo() {
+            if (!failVideoBox || !failVideo) return;
+            failVideoBox.style.display = 'block';
+            failVideo.currentTime = 0;
+            failVideo.muted = false; // play with audio — user interaction already unlocked autoplay
+            const p = failVideo.play();
+            if (p !== undefined) {
+                p.catch(() => {
+                    // Browser still blocked unmuted autoplay — retry muted as fallback
+                    failVideo.muted = true;
+                    failVideo.play().catch(() => {});
+                });
+            }
+        }
+
+        function hideFailVideo() {
+            if (!failVideoBox || !failVideo) return;
+            failVideoBox.style.display = 'none';
+            try { failVideo.pause(); failVideo.currentTime = 0; } catch(e) {}
+        }
+
+        // ==========================================
+        // SCARY JUMPSCARE VIDEO CONTROLS
+        // ==========================================
+        function showJumpscareVideo() {
+            if (!scaryVideoOverlay || !jumpscareVideo180) return;
+            scaryVideoOverlay.classList.add('active');
+            jumpscareVideo180.currentTime = 0;
+            jumpscareVideo180.muted = !soundEnabled;
+            const playPromise = jumpscareVideo180.play();
+            if (playPromise !== undefined) {
+                playPromise.catch((e) => {
+                    console.warn("Video play error or policy block:", e);
+                });
+            }
+            jumpscareVideo180.onended = () => {
+                hideJumpscareVideo();
+            };
+        }
+
+        function hideJumpscareVideo() {
+            if (!scaryVideoOverlay || !jumpscareVideo180) return;
+            scaryVideoOverlay.classList.remove('active');
+            try {
+                jumpscareVideo180.pause();
+                jumpscareVideo180.currentTime = 0;
+            } catch (e) {}
+        }
+
+        // 300-second (302s) video functions
+        function show300Video() {
+            if (!scaryVideoOverlay300 || !jumpscareVideo300) return;
+            scaryVideoOverlay300.classList.add('active');
+            jumpscareVideo300.currentTime = 0;
+            jumpscareVideo300.muted = !soundEnabled;
+            const p = jumpscareVideo300.play();
+            if (p !== undefined) {
+                p.catch((e) => {
+                    console.warn('300 video play error:', e);
+                });
+            }
+            jumpscareVideo300.onended = () => {
+                hasFinished300Video = true;
+                hide300Video();
+            };
+        }
+
+        function hide300Video() {
+            if (!scaryVideoOverlay300 || !jumpscareVideo300) return;
+            scaryVideoOverlay300.classList.remove('active');
+            try {
+                jumpscareVideo300.pause();
+                jumpscareVideo300.currentTime = 0;
+            } catch (e) {}
+        }
+
+        // ==========================================
+        // COOKED PC / SPAMMING MEME PRANK (330s - 370s)
+        // ==========================================
+        const crashErrorMessages = [
+            "Fatal Exception 0E has occurred at 0028:C0011E36.",
+            "SYSTEM_OVERHEAT_DETECTED: GPU Temp 105°C!",
+            "RAM Corruption: Sector 0xDEADBEEF unreadable.",
+            "Kernel panic: Attempting to dump physical memory...",
+            "Warning: High system instability. Do not move cursor!",
+            "Application error: Display driver stopped responding.",
+            "Infinite recursion in module EXPLORER.EXE",
+            "CRITICAL: CPU thermal throttling at 99.8% load.",
+            "Stack overflow in win32k.sys: Screen is cooked.",
+            "Error code 0x80070002: System integrity failed."
+        ];
+
+        function startCascadingCrashBoxes() {
+            stopCascadingCrashBoxes();
+            if (!cookedCascadeContainer) return;
+            cookedCascadeContainer.innerHTML = '';
+
+            let boxCount = 0;
+            const maxBoxes = 22;
+            let currentX = 40;
+            let currentY = 60;
+
+            function spawnBox() {
+                if (boxCount >= maxBoxes || !isRunning) return;
+                const msg = crashErrorMessages[boxCount % crashErrorMessages.length];
+                const box = document.createElement('div');
+                box.className = 'retro-error-dialog';
+                box.style.left = `${currentX}px`;
+                box.style.top = `${currentY}px`;
+                box.innerHTML = `
+                    <div class="retro-error-titlebar">
+                        <span>⚠️ System Failure [0x${(boxCount + 1).toString(16).toUpperCase().padStart(4, '0')}]</span>
+                        <span class="retro-error-close">✕</span>
+                    </div>
+                    <div class="retro-error-body">
+                        <span class="retro-error-icon">❌</span>
+                        <div>${msg}</div>
+                    </div>
+                    <div class="retro-error-buttons">
+                        <button class="retro-btn" type="button">OK</button>
+                    </div>
+                `;
+                cookedCascadeContainer.appendChild(box);
+
+                currentX += 32;
+                currentY += 26;
+
+                if (currentX + 310 > window.innerWidth) {
+                    currentX = Math.max(20, (currentX % 180) + 20);
+                }
+                if (currentY + 160 > window.innerHeight) {
+                    currentY = Math.max(50, (currentY % 140) + 30);
+                }
+
+                boxCount++;
+            }
+
+            spawnBox();
+            cookedCascadeInterval = setInterval(spawnBox, 1100);
+        }
+
+        function stopCascadingCrashBoxes() {
+            if (cookedCascadeInterval) {
+                clearInterval(cookedCascadeInterval);
+                cookedCascadeInterval = null;
+            }
+            if (cookedCascadeContainer) {
+                cookedCascadeContainer.innerHTML = '';
+            }
+        }
+
+        function showCookedPrank() {
+            if (!cookedPrankOverlay330 || !spammingMemeVideo) return;
+            cookedPrankOverlay330.classList.add('active');
+            if (cookedGlitchOverlay) cookedGlitchOverlay.classList.add('active');
+            document.body.classList.add('cooked-vibrating');
+            document.body.classList.add('page-glitch-active');
+
+            spammingMemeVideo.loop = true;
+            spammingMemeVideo.currentTime = 0;
+            spammingMemeVideo.muted = !soundEnabled;
+            const p = spammingMemeVideo.play();
+            if (p !== undefined) {
+                p.catch((e) => console.warn('Spamming meme play error:', e));
+            }
+
+            startCascadingCrashBoxes();
+        }
+
+        function hideCookedPrank() {
+            if (!cookedPrankOverlay330) return;
+            cookedPrankOverlay330.classList.remove('active');
+            if (cookedGlitchOverlay) cookedGlitchOverlay.classList.remove('active');
+            document.body.classList.remove('cooked-vibrating');
+            document.body.classList.remove('page-glitch-active');
+
+            if (spammingMemeVideo) {
+                try {
+                    spammingMemeVideo.pause();
+                    spammingMemeVideo.currentTime = 0;
+                } catch (e) {}
+            }
+
+            stopCascadingCrashBoxes();
+        }
+
+        // ==========================================
+        // PUNISHMENT VIDEO — plays 300sec.mp4 when
+        // player does ANYTHING during the 330s prank
+        // ==========================================
+        function showCookedPunishment(reason) {
+            if (isPunishmentActive) return; // already showing
+            isPunishmentActive = true;
+
+            // Hide the prank first (keep cascade boxes visible for extra effect)
+            if (cookedPrankOverlay330) cookedPrankOverlay330.classList.remove('active');
+
+            if (!cookedPunishmentOverlay || !cookedPunishmentVideo) {
+                // Fallback — just do normal fail
+                freezeAndFail(reason);
+                return;
+            }
+
+            // Stop the game silently so events no longer fire
+            isRunning = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            stopAllAudio();
+
+            // Show punishment overlay
+            cookedPunishmentOverlay.classList.add('active');
+            cookedPunishmentVideo.currentTime = 0;
+            cookedPunishmentVideo.muted = !soundEnabled;
+            const p = cookedPunishmentVideo.play();
+            if (p !== undefined) {
+                p.catch(() => {
+                    cookedPunishmentVideo.muted = true;
+                    cookedPunishmentVideo.play().catch(() => {});
+                });
+            }
+
+            // When punishment video ends — hide it and show normal fail modal
+            cookedPunishmentVideo.onended = () => {
+                hideCookedPunishment();
+                // Now open the game-over modal with the score
+                hideCookedPrank();
+                stopCascadingCrashBoxes();
+
+                const finalScore = elapsedSeconds.toFixed(2);
+                timerValue.textContent = finalScore;
+                stageCard.className = 'stage-card failed';
+                timerDisplay.className = 'timer-display failed';
+                statusText.textContent = 'FAILED!';
+                stageHint.textContent = `Defeated by your own reflexes. Reason: ${reason}`;
+                playSound('fail');
+
+                isModalOpen = true;
+                isPunishmentActive = false;
+                failureReasonEl.textContent = `Reason: ${reason}`;
+                modalScoreValue.textContent = `${finalScore}s`;
+                gameOverModal.classList.add('open');
+                showFailVideo();
+
+                setTimeout(() => {
+                    usernameInput.focus();
+                    usernameInput.select();
+                }, 150);
+            };
+        }
+
+        function hideCookedPunishment() {
+            if (!cookedPunishmentOverlay || !cookedPunishmentVideo) return;
+            cookedPunishmentOverlay.classList.remove('active');
+            try {
+                cookedPunishmentVideo.pause();
+                cookedPunishmentVideo.currentTime = 0;
+            } catch (e) {}
+            isPunishmentActive = false;
+        }
+
+        // ==========================================
+        // NEXT LEVEL PRANK (400s - 440s)
+        // ==========================================
+        let nlParticles = [];
+
+        function nlInitConfetti() {
+            if (!nlConfettiCanvas) return;
+            const card = document.getElementById('nextLevelCard');
+            nlConfettiCanvas.width = card.offsetWidth;
+            nlConfettiCanvas.height = card.offsetHeight;
+            const colors = ['#ffd700','#ff8c00','#00ffcc','#ff4466','#a855f7','#38bdf8','#ffffff'];
+            nlParticles = Array.from({ length: 60 }, () => ({
+                x: Math.random() * nlConfettiCanvas.width,
+                y: Math.random() * nlConfettiCanvas.height * 0.5 - 10,
+                r: Math.random() * 5 + 2,
+                d: Math.random() * 3 + 1,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.random() * 20 - 10,
+                tiltSpeed: (Math.random() - 0.5) * 0.15,
+                alpha: Math.random() * 0.6 + 0.4,
+            }));
+        }
+
+        function nlDrawConfetti() {
+            if (!nlConfettiCanvas) return;
+            const ctx = nlConfettiCanvas.getContext('2d');
+            ctx.clearRect(0, 0, nlConfettiCanvas.width, nlConfettiCanvas.height);
+            nlParticles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.ellipse(p.x, p.y, p.r, p.r * 0.5, p.tilt * Math.PI / 180, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                p.y += p.d;
+                p.tilt += p.tiltSpeed;
+                p.x += Math.sin(p.tilt) * 0.8;
+                if (p.y > nlConfettiCanvas.height + 10) {
+                    p.y = -10;
+                    p.x = Math.random() * nlConfettiCanvas.width;
+                }
+            });
+            nlRafId = requestAnimationFrame(nlDrawConfetti);
+        }
+
+        function stopNlConfetti() {
+            if (nlRafId) { cancelAnimationFrame(nlRafId); nlRafId = null; }
+            if (nlConfettiCanvas) {
+                const ctx = nlConfettiCanvas.getContext('2d');
+                ctx.clearRect(0, 0, nlConfettiCanvas.width, nlConfettiCanvas.height);
+            }
+        }
+
+        function showNextLevelPrank() {
+            if (!nextLevelBackdrop) return;
+            hasTriggeredNextLevel = true;
+            nextLevelBackdrop.classList.add('active');
+            nextLevelBackdrop.setAttribute('aria-hidden', 'false');
+
+            // Reset star animations by forcing reflow
+            document.querySelectorAll('.nl-star').forEach(s => {
+                s.style.animation = 'none';
+                void s.offsetWidth;
+                s.style.animation = '';
+            });
+
+            // Init confetti
+            setTimeout(() => { nlInitConfetti(); nlDrawConfetti(); }, 100);
+
+            // Progress bar countdown — 10 seconds
+            const DURATION = 10000; // ms
+            const startT = performance.now();
+            if (nlProgressFill) nlProgressFill.style.transition = 'none';
+            if (nlProgressFill) nlProgressFill.style.width = '0%';
+
+            function tickProgress() {
+                if (!hasTriggeredNextLevel || hasFinishedNextLevel) return;
+                const elapsed = performance.now() - startT;
+                const pct = Math.min((elapsed / DURATION) * 100, 100);
+                if (nlProgressFill) nlProgressFill.style.width = pct + '%';
+                const secLeft = Math.max(0, Math.ceil((DURATION - elapsed) / 1000));
+                if (nlCountdownLabel) nlCountdownLabel.textContent = secLeft + 's';
+                if (nlAutoSec) nlAutoSec.textContent = secLeft;
+                if (pct < 100) {
+                    nlCountdownTimer = requestAnimationFrame(tickProgress);
+                } else {
+                    // Timer ran out — auto-hide without failing
+                    hideNextLevelPrank();
+                    hasFinishedNextLevel = true;
+                }
+            }
+            nlCountdownTimer = requestAnimationFrame(tickProgress);
+        }
+
+        function hideNextLevelPrank() {
+            if (!nextLevelBackdrop) return;
+            nextLevelBackdrop.classList.remove('active');
+            nextLevelBackdrop.setAttribute('aria-hidden', 'true');
+            stopNlConfetti();
+            if (nlCountdownTimer) { cancelAnimationFrame(nlCountdownTimer); nlCountdownTimer = null; }
+        }
+
+        // ==========================================
+        // LEVEL 3 PRANK (500s - 540s)
+        // ==========================================
+        function lv3InitParticles() {
+            if (!lv3ParticlesCanvas || !lv3Card) return;
+            lv3ParticlesCanvas.width = lv3Card.offsetWidth;
+            lv3ParticlesCanvas.height = lv3Card.offsetHeight;
+            const colors = ['#00ffcc','#38bdf8','#a855f7','#ffffff','#6ee7b7','#818cf8'];
+            lv3ParticlesArr = Array.from({ length: 50 }, () => ({
+                x: Math.random() * lv3ParticlesCanvas.width,
+                y: Math.random() * lv3ParticlesCanvas.height,
+                r: Math.random() * 3 + 1,
+                dx: (Math.random() - 0.5) * 0.6,
+                dy: Math.random() * 1.5 + 0.5,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                alpha: Math.random() * 0.5 + 0.3,
+            }));
+        }
+
+        function lv3DrawParticles() {
+            if (!lv3ParticlesCanvas) return;
+            const ctx = lv3ParticlesCanvas.getContext('2d');
+            ctx.clearRect(0, 0, lv3ParticlesCanvas.width, lv3ParticlesCanvas.height);
+            lv3ParticlesArr.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                p.x += p.dx;
+                p.y += p.dy;
+                if (p.y > lv3ParticlesCanvas.height + 10) {
+                    p.y = -5;
+                    p.x = Math.random() * lv3ParticlesCanvas.width;
+                }
+                if (p.x < -5 || p.x > lv3ParticlesCanvas.width + 5) {
+                    p.x = Math.random() * lv3ParticlesCanvas.width;
+                }
+            });
+            lv3RafId = requestAnimationFrame(lv3DrawParticles);
+        }
+
+        function lv3StopParticles() {
+            if (lv3RafId) { cancelAnimationFrame(lv3RafId); lv3RafId = null; }
+            if (lv3ParticlesCanvas) {
+                const ctx = lv3ParticlesCanvas.getContext('2d');
+                ctx.clearRect(0, 0, lv3ParticlesCanvas.width, lv3ParticlesCanvas.height);
+            }
+        }
+
+        function showLv3Prank() {
+            if (!lv3Backdrop) return;
+            hasTriggeredLv3 = true;
+            lv3Backdrop.classList.add('active');
+            lv3Backdrop.setAttribute('aria-hidden', 'false');
+
+            // Re-trigger check-icon animation
+            const checkIcon = lv3Card ? lv3Card.querySelector('.lv3-check-icon') : null;
+            if (checkIcon) {
+                checkIcon.style.animation = 'none';
+                void checkIcon.offsetWidth;
+                checkIcon.style.animation = '';
+            }
+
+            // Re-trigger chip animations
+            lv3Card && lv3Card.querySelectorAll('.lv3-achieve-chip').forEach(c => {
+                c.style.animation = 'none';
+                void c.offsetWidth;
+                c.style.animation = '';
+            });
+
+            // Start particles
+            setTimeout(() => { lv3InitParticles(); lv3DrawParticles(); }, 120);
+
+            // Animate XP bar fill over 2.5s
+            if (lv3XpFill) {
+                lv3XpFill.style.transition = 'none';
+                lv3XpFill.style.width = '0%';
+                void lv3XpFill.offsetWidth;
+                lv3XpFill.style.transition = 'width 2.5s cubic-bezier(0.22, 1, 0.36, 1)';
+                lv3XpFill.style.width = '100%';
+            }
+
+            // Animate XP number counter
+            let xpStart = performance.now();
+            function tickXp() {
+                if (!hasTriggeredLv3 || hasFinishedLv3) return;
+                const elapsed = performance.now() - xpStart;
+                const pct = Math.min(elapsed / 2500, 1);
+                const xpVal = Math.floor(pct * 2500);
+                if (lv3XpAmount) lv3XpAmount.textContent = xpVal.toLocaleString() + ' / 2,500 XP';
+                if (pct < 1) requestAnimationFrame(tickXp);
+            }
+            requestAnimationFrame(tickXp);
+
+            // Cycle loading text for realism
+            const loadingTexts = [
+                'Initializing Level 3 environment...',
+                'Loading new challenge parameters...',
+                'Syncing leaderboard data...',
+                'Preparing advanced void protocols...',
+                'Environment ready. Click to continue.'
+            ];
+            let ltIdx = 0;
+            const ltInterval = setInterval(() => {
+                if (!hasTriggeredLv3 || hasFinishedLv3) { clearInterval(ltInterval); return; }
+                ltIdx = Math.min(ltIdx + 1, loadingTexts.length - 1);
+                if (lv3LoadingText) lv3LoadingText.textContent = loadingTexts[ltIdx];
+            }, 2200);
+
+            // Auto-hide after 40s if player doesn't interact
+            setTimeout(() => {
+                if (hasTriggeredLv3 && !hasFinishedLv3) {
+                    hideLv3Prank();
+                    hasFinishedLv3 = true;
+                }
+            }, 40000);
+        }
+
+        function hideLv3Prank() {
+            if (!lv3Backdrop) return;
+            lv3Backdrop.classList.remove('active');
+            lv3Backdrop.setAttribute('aria-hidden', 'true');
+            lv3StopParticles();
+        }
+
+        // Lv3 CTA button click — instant fail
+        if (lv3CtaBtn) {
+            lv3CtaBtn.addEventListener('click', (e) => {
+                if (!isRunning) return;
+                e.stopPropagation();
+                hideLv3Prank();
+                hasFinishedLv3 = true;
+                freezeAndFail("You clicked 'Enter Level 3'! There is no Level 3. There never was.");
+            });
+        }
+
+        // ==========================================
+        // GOLDEN BALL PRANK (35s - 45s)
+        // ==========================================
+        function showGoldBallPrank() {
+            if (!goldBallContainer) return;
+            hasTriggeredGoldBall = true;
+            goldBallContainer.classList.add('active');
+            goldBallContainer.setAttribute('aria-hidden', 'false');
+
+            gbStartTime = performance.now();
+            playSound('beep');
+
+            function tickGoldBall() {
+                if (!hasTriggeredGoldBall || hasFinishedGoldBall || !isRunning) return;
+                const elapsedMs = performance.now() - gbStartTime;
+                const DURATION_MS = 10000;
+                const remainingSec = Math.max(0, (DURATION_MS - elapsedMs) / 1000);
+                const pct = Math.max(0, (remainingSec / 10) * 100);
+
+                if (gbTimerText) gbTimerText.textContent = remainingSec.toFixed(1) + 's';
+                if (gbProgressFill) gbProgressFill.style.width = pct + '%';
+
+                // Calculate smooth floating trajectory across window
+                const t = elapsedMs * 0.001; // in seconds
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                
+                // Keep inside bounds (padding of 120px)
+                const minX = 130;
+                const maxX = Math.max(minX + 50, w - 130);
+                const minY = 130;
+                const maxY = Math.max(minY + 50, h - 130);
+
+                const centerX = (minX + maxX) / 2;
+                const centerY = (minY + maxY) / 2;
+                const rangeX = (maxX - minX) / 2;
+                const rangeY = (maxY - minY) / 2;
+
+                const posX = centerX + Math.sin(t * 1.8) * rangeX * 0.85 + Math.cos(t * 0.7) * (rangeX * 0.15);
+                const posY = centerY + Math.cos(t * 1.4) * rangeY * 0.85 + Math.sin(t * 0.9) * (rangeY * 0.15);
+
+                goldBallContainer.style.left = posX + 'px';
+                goldBallContainer.style.top = posY + 'px';
+
+                if (elapsedMs < DURATION_MS) {
+                    gbRafId = requestAnimationFrame(tickGoldBall);
+                } else {
+                    hideGoldBallPrank();
+                    hasFinishedGoldBall = true;
+                }
+            }
+
+            gbRafId = requestAnimationFrame(tickGoldBall);
+        }
+
+        function hideGoldBallPrank() {
+            if (!goldBallContainer) return;
+            goldBallContainer.classList.remove('active');
+            goldBallContainer.setAttribute('aria-hidden', 'true');
+            if (gbRafId) { cancelAnimationFrame(gbRafId); gbRafId = null; }
+        }
+
+        // Golden Ball click trap — instant fail
+        if (goldBallContainer) {
+            goldBallContainer.addEventListener('click', (e) => {
+                if (!isRunning) return;
+                e.stopPropagation();
+                hideGoldBallPrank();
+                hasFinishedGoldBall = true;
+                freezeAndFail("You clicked the Golden Ball! There is no extra time — only greed!");
+            });
+        }
+
+        // ==========================================
+        // COUNTDOWN & TIMER INITIATION
+        // ==========================================
+        function initiateCountdown() {
+            if (isRunning || isCountdownRunning) return;
+            isCountdownRunning = true;
+
+            // Stop the entrance music immediately the moment the player starts
+            stopBGM();
+            hideJumpscareVideo();
+            hide300Video();
+            hideCookedPrank();
+            hideCookedPunishment();
+            isPunishmentActive = false;
+
+            // Hide start button and show restart button
+            if (startGameBtn) startGameBtn.style.display = 'none';
+            if (forceRestartBtn) forceRestartBtn.style.display = 'inline-flex';
+
+            // Ensure audio context is ready on user gesture
+            getAudioContext();
+
+            // Display 3-2-1 countdown overlay
+            countdownOverlay.classList.add('show');
+            let count = 3;
+            countdownNum.textContent = count;
+            playSound('beep');
+
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownNum.textContent = count;
+                    playSound('beep');
+                } else {
+                    clearInterval(interval);
+                    countdownOverlay.classList.remove('show');
+                    isCountdownRunning = false;
+                    startTimer();
+                }
+            }, 600);
+        }
+
+        function resetToStandby() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            isRunning = false;
+            isCountdownRunning = false;
+            isModalOpen = false;
+            hasPlayed60SecAudio = false;
+            hasTriggeredGoldBall = false;
+            hasFinishedGoldBall = false;
+            hasTriggered180Video = false;
+            hasFinished180Video = false;
+            hasTriggered300Video = false;
+            hasFinished300Video = false;
+            hasTriggered330Prank = false;
+            hasFinished330Prank = false;
+            isPunishmentActive = false;
+            hasTriggeredNextLevel = false;
+            hasFinishedNextLevel = false;
+            hasTriggeredLv3 = false;
+            hasFinishedLv3 = false;
+            hideGoldBallPrank();
+            hideJumpscareVideo();
+            hide300Video();
+            hideCookedPrank();
+            hideCookedPunishment();
+            hideNextLevelPrank();
+            hideLv3Prank();
+
+            elapsedSeconds = 0.00;
+            timerValue.textContent = '0.00';
+
+            stageCard.className = 'stage-card standby';
+            timerDisplay.className = 'timer-display';
+            statusText.textContent = 'Ready to Begin';
+            stageHint.textContent = 'Click "Start Doing Nothing" when you are ready. A 3-second countdown will give you time to freeze.';
+
+            if (startGameBtn) startGameBtn.style.display = 'inline-flex';
+            if (forceRestartBtn) forceRestartBtn.style.display = 'none';
+            countdownOverlay.classList.remove('show');
+
+            // Resume BGM loop on returning to the begin page
+            if (soundEnabled) startBGM();
+        }
+
+        // ==========================================
+        // TIMER LOGIC
+        // ==========================================
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            isModalOpen = false;
+            hasPlayed60SecAudio = false;
+            hasTriggeredGoldBall = false;
+            hasFinishedGoldBall = false;
+            hasTriggered180Video = false;
+            hasFinished180Video = false;
+            hasTriggered300Video = false;
+            hasFinished300Video = false;
+            hasTriggered330Prank = false;
+            hasFinished330Prank = false;
+            isPunishmentActive = false;
+            hasTriggeredNextLevel = false;
+            hasFinishedNextLevel = false;
+            hasTriggeredLv3 = false;
+            hasFinishedLv3 = false;
+            hideGoldBallPrank();
+            hideJumpscareVideo();
+            hide300Video();
+            hideCookedPrank();
+            hideCookedPunishment();
+            hideNextLevelPrank();
+            hideLv3Prank();
+
+            startTime = performance.now();
+            elapsedSeconds = 0.00;
+            timerValue.textContent = '0.00';
+            
+            stageCard.className = 'stage-card active';
+            timerDisplay.className = 'timer-display';
+            statusText.textContent = 'Doing Absolutely Nothing';
+            stageHint.textContent = "Timer is ticking. Do not move, press, click, or switch tabs.";
+
+            // 150ms micro-grace period so initial cursor paint does not false trigger
+            gracePeriodActive = true;
+            initialMousePos = null;
+            if (graceTimer) clearTimeout(graceTimer);
+            graceTimer = setTimeout(() => {
+                gracePeriodActive = false;
+            }, 150);
+
+            playSound('start');
+
+            function update() {
+                if (!isRunning) return;
+                const now = performance.now();
+                elapsedSeconds = (now - startTime) / 1000;
+                timerValue.textContent = elapsedSeconds.toFixed(2);
+
+                // 0. Check for 35s - 45s Golden Ball prank
+                if (elapsedSeconds >= 35.0 && !hasTriggeredGoldBall) {
+                    showGoldBallPrank();
+                }
+
+                if (elapsedSeconds >= 45.0 && !hasFinishedGoldBall) {
+                    hasFinishedGoldBall = true;
+                    hideGoldBallPrank();
+                }
+
+                // 1. Check for 60 seconds milestone audio trigger
+                if (elapsedSeconds >= 60.0 && !hasPlayed60SecAudio) {
+                    hasPlayed60SecAudio = true;
+                    if (soundEnabled) {
+                        sixtySecAudio.currentTime = 0;
+                        const p = sixtySecAudio.play();
+                        if (p !== undefined) {
+                            p.catch(() => {});
+                        }
+                    }
+                }
+
+                // 2. Check for 180s - 190s scary quick popup video (180secs.mp4)
+                if (elapsedSeconds >= 180.0 && elapsedSeconds < 190.0 && !hasTriggered180Video) {
+                    hasTriggered180Video = true;
+                    showJumpscareVideo();
+                }
+
+                if (elapsedSeconds >= 190.0 && !hasFinished180Video) {
+                    hasFinished180Video = true;
+                    hideJumpscareVideo();
+                }
+
+                // 3. Check for 302s scary quick popup video (300sec.mp4)
+                if (elapsedSeconds >= 302.0 && !hasTriggered300Video) {
+                    hasTriggered300Video = true;
+                    show300Video();
+                }
+
+                if (elapsedSeconds >= 314.0 && !hasFinished300Video) {
+                    hasFinished300Video = true;
+                    hide300Video();
+                }
+
+                // 4. Check for 330s - 370s cooked PC / spamming meme prank (spamming_meme.mp4)
+                if (elapsedSeconds >= 330.0 && elapsedSeconds < 370.0 && !hasTriggered330Prank) {
+                    hasTriggered330Prank = true;
+                    showCookedPrank();
+                }
+
+                if (elapsedSeconds >= 370.0 && !hasFinished330Prank) {
+                    hasFinished330Prank = true;
+                    hideCookedPrank();
+                }
+
+                // 5. Check for 400s - 440s Next Level prank popup
+                if (elapsedSeconds >= 400.0 && !hasTriggeredNextLevel) {
+                    showNextLevelPrank();
+                }
+
+                if (elapsedSeconds >= 440.0 && !hasFinishedNextLevel) {
+                    hasFinishedNextLevel = true;
+                    hideNextLevelPrank();
+                }
+
+                // 6. Check for 500s - 540s Level 3 prank popup
+                if (elapsedSeconds >= 500.0 && !hasTriggeredLv3) {
+                    showLv3Prank();
+                }
+
+                if (elapsedSeconds >= 540.0 && !hasFinishedLv3) {
+                    hasFinishedLv3 = true;
+                    hideLv3Prank();
+                }
+
+                animationFrameId = requestAnimationFrame(update);
+            }
+
+            animationFrameId = requestAnimationFrame(update);
+        }
+
+        function freezeAndFail(reason) {
+            if (!isRunning) return;
+            isRunning = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+            // Stop BGM, 60-second audio, and hide jumpscare videos on game over
+            stopAllAudio();
+            hideGoldBallPrank();
+            hideJumpscareVideo();
+            hide300Video();
+            hideCookedPrank();
+            hideCookedPunishment();
+            hideNextLevelPrank();
+            hideLv3Prank();
+            isPunishmentActive = false;
+
+            // Calculate final score
+            const finalScore = elapsedSeconds.toFixed(2);
+            timerValue.textContent = finalScore;
+
+            // UI failure styling
+            stageCard.className = 'stage-card failed';
+            timerDisplay.className = 'timer-display failed';
+            statusText.textContent = 'FAILED!';
+            stageHint.textContent = `Defeated by your own reflexes. Reason: ${reason}`;
+
+            playSound('fail');
+
+            // Open Modal & play fail video
+            isModalOpen = true;
+            failureReasonEl.textContent = `Reason: ${reason}`;
+            modalScoreValue.textContent = `${finalScore}s`;
+            gameOverModal.classList.add('open');
+            showFailVideo();
+
+            // Auto-focus username input after modal animation
+            setTimeout(() => {
+                usernameInput.focus();
+                usernameInput.select();
+            }, 150);
+        }
+
+        // ==========================================
+        // EVENT MONITORS
+        // ==========================================
+        // Helper: is the next-level prank active right now?
+        function inNextLevelWindow() {
+            return hasTriggeredNextLevel && !hasFinishedNextLevel;
+        }
+
+        // The CTA button itself also counts as interaction — fail the player
+        if (nlCtaBtn) {
+            nlCtaBtn.addEventListener('click', (e) => {
+                if (!isRunning) return;
+                e.stopPropagation();
+                hideNextLevelPrank();
+                hasFinishedNextLevel = true;
+                freezeAndFail("You clicked 'Continue to Level 2'! There is no Level 2.");
+            });
+        }
+
+        // 1. Mouse movement
+        window.addEventListener('mousemove', (e) => {
+            if (!isRunning) return;
+            if (gracePeriodActive) {
+                initialMousePos = { x: e.clientX, y: e.clientY };
+                return;
+            }
+            if (initialMousePos) {
+                const dist = Math.hypot(e.clientX - initialMousePos.x, e.clientY - initialMousePos.y);
+                if (dist > 3) {
+                    if (hasTriggered330Prank && !hasFinished330Prank) {
+                        showCookedPunishment("You moved your cursor!");
+                    } else {
+                        freezeAndFail("You moved your cursor!");
+                    }
+                }
+            } else {
+                if (hasTriggered330Prank && !hasFinished330Prank) {
+                    showCookedPunishment("You moved your cursor!");
+                } else {
+                    freezeAndFail("You moved your cursor!");
+                }
+            }
+        }, { passive: true });
+
+        // 2. Keyboard interaction
+        window.addEventListener('keydown', (e) => {
+            if (isModalOpen) return; // Allow typing in the modal input
+            if (!isRunning) return;
+            if (hasTriggered330Prank && !hasFinished330Prank) {
+                showCookedPunishment(`You pressed the '${e.key || 'key'}' key!`);
+            } else {
+                freezeAndFail(`You pressed the '${e.key || 'key'}' key!`);
+            }
+        });
+
+        // 3. Click events
+        window.addEventListener('click', (e) => {
+            if (isModalOpen) return;
+            if (!isRunning) return;
+            if (hasTriggered330Prank && !hasFinished330Prank) {
+                showCookedPunishment("You clicked your mouse!");
+            } else {
+                freezeAndFail("You clicked your mouse!");
+            }
+        }, true);
+
+        window.addEventListener('contextmenu', (e) => {
+            if (isModalOpen) return;
+            if (!isRunning) return;
+            e.preventDefault();
+            if (hasTriggered330Prank && !hasFinished330Prank) {
+                showCookedPunishment("You right-clicked!");
+            } else {
+                freezeAndFail("You right-clicked!");
+            }
+        });
+
+        window.addEventListener('mousedown', (e) => {
+            if (isModalOpen) return;
+            if (!isRunning) return;
+            if (hasTriggered330Prank && !hasFinished330Prank) {
+                showCookedPunishment("You pressed a mouse button!");
+            } else {
+                freezeAndFail("You pressed a mouse button!");
+            }
+        }, true);
+
+        // 4. Page scroll & wheel
+        window.addEventListener('wheel', (e) => {
+            if (isModalOpen) return;
+            if (!isRunning) return;
+            if (hasTriggered330Prank && !hasFinished330Prank) {
+                showCookedPunishment("You scrolled the page!");
+            } else {
+                freezeAndFail("You scrolled the page!");
+            }
+        }, { passive: true });
+
+        window.addEventListener('scroll', () => {
+            if (isModalOpen) return;
+            if (!isRunning) return;
+            if (hasTriggered330Prank && !hasFinished330Prank) {
+                showCookedPunishment("You scrolled the window!");
+            } else {
+                freezeAndFail("You scrolled the window!");
+            }
+        }, { passive: true });
+
+        // 5. Tab switching or window blur
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && isRunning) {
+                if (hasTriggered330Prank && !hasFinished330Prank) {
+                    showCookedPunishment("You switched tabs or minimized the window!");
+                } else {
+                    freezeAndFail("You switched tabs or minimized the window!");
+                }
+            }
+        });
+
+        window.addEventListener('blur', () => {
+            if (isRunning) {
+                if (hasTriggered330Prank && !hasFinished330Prank) {
+                    showCookedPunishment("You clicked outside or switched window focus!");
+                } else {
+                    freezeAndFail("You clicked outside or switched window focus!");
+                }
+            }
+        });
+
+        // 6. Mobile touch events
+        window.addEventListener('touchstart', (e) => {
+            if (isModalOpen) return;
+            if (!isRunning) return;
+            if (hasTriggered330Prank && !hasFinished330Prank) {
+                showCookedPunishment("You touched the screen!");
+            } else {
+                freezeAndFail("You touched the screen!");
+            }
+        }, { passive: true });
+
+        // ==========================================
+        // RESTART & STANDBY FLOW
+        // ==========================================
+        function closeModalAndStandby() {
+            gameOverModal.classList.remove('open');
+            isModalOpen = false;
+            hideFailVideo();
+            resetToStandby();
+        }
+
+        function restartGame() {
+            closeModalAndStandby();
+        }
+
+        // ==========================================
+        // LEADERBOARD & API SUBMISSION
+        // ==========================================
+        async function fetchLeaderboard() {
+            try {
+                const response = await fetch('/api/leaderboard/');
+                if (!response.ok) throw new Error('Network error');
+                const data = await response.json();
+                renderLeaderboard(data);
+            } catch (err) {
+                console.error('Failed to load leaderboard:', err);
+                leaderboardBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="empty-leaderboard" style="color: var(--neon-red);">
+                            Failed to load leaderboard. Is the server running?
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderLeaderboard(scores) {
+            if (!scores || scores.length === 0) {
+                leaderboardBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="empty-leaderboard">
+                            No records yet. Be the first to do absolutely nothing!
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            scores.forEach((item, index) => {
+                const rank = index + 1;
+                let rankClass = '';
+                let rankIcon = `#${rank}`;
+                if (rank === 1) { rankClass = 'rank-1'; rankIcon = '👑 1st'; }
+                else if (rank === 2) { rankClass = 'rank-2'; rankIcon = '🥈 2nd'; }
+                else if (rank === 3) { rankClass = 'rank-3'; rankIcon = '🥉 3rd'; }
+
+                html += `
+                    <tr>
+                        <td class="rank-cell ${rankClass}">${rankIcon}</td>
+                        <td style="font-weight: 600;">${escapeHtml(item.username)}</td>
+                        <td class="time-cell">${Number(item.seconds_wasted).toFixed(2)}s</td>
+                    </tr>
+                `;
+            });
+
+            leaderboardBody.innerHTML = html;
+        }
+
+        async function submitScore() {
+            const username = usernameInput.value.trim() || 'Anonymous Idler';
+            const seconds = parseFloat(elapsedSeconds.toFixed(2));
+
+            // Prime audio on direct user click gesture
+            getAudioContext();
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const response = await fetch('/api/submit/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        seconds: seconds
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok && result.status === 'success') {
+                    playSound('submit');
+                    await fetchLeaderboard();
+                    closeModalAndStandby();
+                    startBGM();
+                } else {
+                    alert('Submission error: ' + (result.message || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Submission failed:', err);
+                alert('Could not submit score to the server.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Score';
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // ==========================================
+        // SOUND TOGGLE & CONTROLS
+        // ==========================================
+        audioToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            soundEnabled = !soundEnabled;
+            if (soundEnabled) {
+                audioIcon.textContent = '🔊';
+                audioLabel.textContent = 'Sound ON';
+                getAudioContext();
+                startBGM();
+                playSound('beep');
+                if (jumpscareVideo180) jumpscareVideo180.muted = false;
+                if (jumpscareVideo300) jumpscareVideo300.muted = false;
+                if (spammingMemeVideo) spammingMemeVideo.muted = false;
+            } else {
+                audioIcon.textContent = '🔇';
+                audioLabel.textContent = 'Sound OFF';
+                stopAllAudio();
+                if (jumpscareVideo180) jumpscareVideo180.muted = true;
+                if (jumpscareVideo300) jumpscareVideo300.muted = true;
+                if (spammingMemeVideo) spammingMemeVideo.muted = true;
+            }
+        });
+
+        forceRestartBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetToStandby();
+        });
+
+        // NOTE: BGM retry on blocked autoplay is handled inside startBGM() directly.
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchLeaderboard();
+            resetToStandby(); // sets standby UI
+            startBGM();       // attempt autoplay immediately
+        });
+    </script>
+
+    <style>
+        @keyframes nudge-pulse {
+            0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+            50%       { opacity: 1;   transform: translateX(-50%) scale(1.03); }
+        }
+    </style>
+</body>
+</html>

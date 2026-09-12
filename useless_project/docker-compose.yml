@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: nothing_game_app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=production-secret-key-change-me
+      - ALLOWED_HOSTS=*
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
