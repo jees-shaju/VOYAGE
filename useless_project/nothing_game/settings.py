@@ -90,40 +90,46 @@ db_url = (
     os.environ.get('STORAGE_POSTGRES_URL')
 )
 
+db_configured = False
 if db_url:
     try:
         import dj_database_url
         ssl_req = 'postgres' in db_url or 'postgresql' in db_url
-        DATABASES['default'] = dj_database_url.config(
+        parsed_db = dj_database_url.config(
             default=db_url,
             conn_max_age=600,
             conn_health_checks=True,
             ssl_require=ssl_req
         )
-    except ImportError:
-        pass
-elif IS_VERCEL:
-    db_path = Path('/tmp/db.sqlite3')
-    initial_db = BASE_DIR / 'db.sqlite3'
-    if initial_db.exists() and not db_path.exists():
-        import shutil
-        try:
-            shutil.copyfile(initial_db, db_path)
-        except Exception:
-            pass
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': db_path,
+        if parsed_db:
+            DATABASES['default'] = parsed_db
+            db_configured = True
+    except Exception as e:
+        print(f"PostgreSQL config warning: {e}")
+
+if not db_configured:
+    if IS_VERCEL:
+        db_path = Path('/tmp/db.sqlite3')
+        initial_db = BASE_DIR / 'db.sqlite3'
+        if initial_db.exists() and not db_path.exists():
+            import shutil
+            try:
+                shutil.copyfile(initial_db, db_path)
+            except Exception:
+                pass
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': db_path,
+            }
         }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
         }
-    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
