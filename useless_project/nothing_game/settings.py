@@ -78,11 +78,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'nothing_game.wsgi.application'
 ASGI_APPLICATION = 'nothing_game.asgi.application'
 
-# Database
-# Default: SQLite3 in /tmp for Vercel serverless environment compatibility if read-only
-IS_VERCEL = 'VERCEL' in os.environ
+# Support DATABASE_URL / POSTGRES_URL if deployed to Render / Railway / Vercel Neon / Supabase
+db_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL') or os.environ.get('POSTGRES_URL_NON_POOLING')
 
-if IS_VERCEL and not os.environ.get('DATABASE_URL'):
+if db_url:
+    try:
+        import dj_database_url
+        DATABASES['default'] = dj_database_url.config(
+            default=db_url,
+            conn_max_age=600,
+            conn_health_checks=True
+        )
+    except ImportError:
+        pass
+elif IS_VERCEL:
     db_path = Path('/tmp/db.sqlite3')
     initial_db = BASE_DIR / 'db.sqlite3'
     if initial_db.exists() and not db_path.exists():
@@ -97,15 +106,6 @@ if IS_VERCEL and not os.environ.get('DATABASE_URL'):
             'NAME': db_path,
         }
     }
-elif 'DATABASE_URL' in os.environ and os.environ.get('DATABASE_URL'):
-    try:
-        import dj_database_url
-        DATABASES['default'] = dj_database_url.config(
-            conn_max_age=600,
-            conn_health_checks=True
-        )
-    except ImportError:
-        pass
 else:
     DATABASES = {
         'default': {
