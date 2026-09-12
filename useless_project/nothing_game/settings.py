@@ -22,6 +22,11 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://*.now.sh',
+]
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -74,16 +79,25 @@ WSGI_APPLICATION = 'nothing_game.wsgi.application'
 ASGI_APPLICATION = 'nothing_game.asgi.application'
 
 # Database
-# Default: SQLite3
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# Default: SQLite3 in /tmp for Vercel serverless environment compatibility if read-only
+IS_VERCEL = 'VERCEL' in os.environ
 
-# Support DATABASE_URL if deployed to Render / Railway / Heroku / Postgres
-if 'DATABASE_URL' in os.environ and os.environ['DATABASE_URL']:
+if IS_VERCEL and not os.environ.get('DATABASE_URL'):
+    db_path = Path('/tmp/db.sqlite3')
+    initial_db = BASE_DIR / 'db.sqlite3'
+    if initial_db.exists() and not db_path.exists():
+        import shutil
+        try:
+            shutil.copyfile(initial_db, db_path)
+        except Exception:
+            pass
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': db_path,
+        }
+    }
+elif 'DATABASE_URL' in os.environ and os.environ.get('DATABASE_URL'):
     try:
         import dj_database_url
         DATABASES['default'] = dj_database_url.config(
@@ -92,6 +106,13 @@ if 'DATABASE_URL' in os.environ and os.environ['DATABASE_URL']:
         )
     except ImportError:
         pass
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -123,7 +144,8 @@ STATICFILES_DIRS = [
     BASE_DIR / 'music_nothing',
 ]
 # Whitenoise storage for compression and caching
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage' if not DEBUG else 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage' if not DEBUG else 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
