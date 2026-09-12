@@ -1998,8 +1998,8 @@
     <div class="scary-video-overlay" id="scaryVideoOverlay" aria-hidden="true">
         <div class="scary-video-container">
             <video id="jumpscareVideo180" playsinline preload="auto">
-                <source src="/static/180secs.mp4" type="video/mp4">
                 <source src="/static/music_nothing/180secs.mp4" type="video/mp4">
+                <source src="/static/180secs.mp4" type="video/mp4">
                 <source src="/static/audio/180secs.mp4" type="video/mp4">
             </video>
         </div>
@@ -2009,8 +2009,8 @@
     <div class="scary-video-overlay" id="scaryVideoOverlay300" aria-hidden="true">
         <div class="scary-video-container">
             <video id="jumpscareVideo300" playsinline preload="auto">
-                <source src="/static/random.mp4" type="video/mp4">
                 <source src="/static/music_nothing/random.mp4" type="video/mp4">
+                <source src="/static/random.mp4" type="video/mp4">
                 <source src="/static/audio/random.mp4" type="video/mp4">
             </video>
         </div>
@@ -2020,8 +2020,8 @@
     <div class="scary-video-overlay" id="cookedPunishmentOverlay" aria-hidden="true">
         <div class="scary-video-container">
             <video id="cookedPunishmentVideo" playsinline preload="auto">
-                <source src="/static/300sec.mp4" type="video/mp4">
                 <source src="/static/music_nothing/300sec.mp4" type="video/mp4">
+                <source src="/static/300sec.mp4" type="video/mp4">
                 <source src="/static/audio/300sec.mp4" type="video/mp4">
             </video>
         </div>
@@ -2031,8 +2031,8 @@
     <div class="cooked-glitch-overlay" id="cookedGlitchOverlay" aria-hidden="true"></div>
     <div class="cooked-prank-overlay" id="cookedPrankOverlay330" aria-hidden="true">
         <video id="spammingMemeVideo" playsinline preload="auto" loop>
-            <source src="/static/spamming_meme.mp4" type="video/mp4">
             <source src="/static/music_nothing/spamming_meme.mp4" type="video/mp4">
+            <source src="/static/spamming_meme.mp4" type="video/mp4">
             <source src="/static/audio/spamming_meme.mp4" type="video/mp4">
         </video>
         <div class="cooked-glitch-scanlines"></div>
@@ -2161,7 +2161,8 @@
 
             <!-- Fail video square box (top of modal) -->
             <div class="fail-video-box" id="failVideoBox">
-                <video id="failVideo" playsinline>
+                <video id="failVideo" playsinline loop preload="auto">
+                    <source src="/static/music_nothing/fail.mp4" type="video/mp4">
                     <source src="/static/audio/fail.mp4" type="video/mp4">
                     <source src="/static/fail.mp4" type="video/mp4">
                 </video>
@@ -2264,10 +2265,10 @@
 
         // 3. Custom UI Audio Assets (looks for files placed in /static/audio/ or static root)
         const customAudio = {
-            fail: new Audio('/static/audio/fail.mp3'),
-            start: new Audio('/static/audio/start.mp3'),
-            submit: new Audio('/static/audio/submit.mp3'),
-            beep: new Audio('/static/audio/beep.mp3'),
+            fail: null,
+            start: null,
+            submit: null,
+            beep: null,
         };
 
         function startBGM() {
@@ -2464,6 +2465,7 @@
             if (!failVideoBox || !failVideo) return;
             failVideoBox.style.display = 'block';
             failVideo.currentTime = 0;
+            failVideo.loop = true;
             failVideo.muted = false; // play with audio — user interaction already unlocked autoplay
             const p = failVideo.play();
             if (p !== undefined) {
@@ -3261,6 +3263,7 @@
 
             // Stop BGM, 60-second audio, and hide jumpscare videos on game over
             stopAllAudio();
+            stopBGM();
             hideGoldBallPrank();
             hideJumpscareVideo();
             hide300Video();
@@ -3288,7 +3291,6 @@
             modalScoreValue.textContent = `${finalScore}s`;
             gameOverModal.classList.add('open');
             showFailVideo();
-            if (soundEnabled) startBGM();
 
             // Auto-focus username input after modal animation
             setTimeout(() => {
