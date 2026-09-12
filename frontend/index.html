@@ -3437,14 +3437,24 @@
 
         // ==========================================
         // ==========================================
-        // BACKEND URL - Update this after Railway deployment!
+        // BACKEND URL - Update this or set in localStorage after Render deployment!
         // ==========================================
-        const BACKEND_URL = 'REPLACE_WITH_YOUR_RAILWAY_URL'; // e.g. https://voyage-backend.up.railway.app
+        const BACKEND_URL = (window.VOYAGE_BACKEND_URL || localStorage.getItem('VOYAGE_BACKEND_URL') || 'REPLACE_WITH_YOUR_RENDER_URL').replace(/\/+$/, '');
 
         // ==========================================
         // LEADERBOARD & API SUBMISSION
         // ==========================================
         async function fetchLeaderboard() {
+            if (!BACKEND_URL || BACKEND_URL.includes('REPLACE_WITH_YOUR_')) {
+                leaderboardBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="empty-leaderboard" style="color: var(--neon-cyan);">
+                            Leaderboard standby. Configure Render Backend URL to view live rankings.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
             try {
                 const response = await fetch(`${BACKEND_URL}/api/leaderboard/`);
                 if (!response.ok) throw new Error('Network error');

@@ -18,24 +18,19 @@ ALLOWED_HOSTS = [
 ]
 
 # ─── CORS (allow Vercel frontend to call this backend) ────────────────────────
-CORS_ALLOWED_ORIGINS = [
-    origin.strip()
-    for origin in os.environ.get(
-        'CORS_ALLOWED_ORIGINS',
-        'http://localhost:3000,http://127.0.0.1:5500'
-    ).split(',')
-    if origin.strip()
-]
-# Allow any *.vercel.app subdomain automatically
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.vercel\.app$",
 ]
-CORS_ALLOW_CREDENTIALS = True
+
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.vercel.app',
     'https://*.railway.app',
+    'https://*.onrender.com',
 ]
+
 
 # ─── Apps ─────────────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
