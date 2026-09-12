@@ -163,6 +163,13 @@ STATICFILES_DIRS = [
 # Whitenoise storage for compression and caching
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage' if not DEBUG else 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
+# MIME Types for video/audio playback
+WHITENOISE_MIMETYPES = {
+    '.mp4': 'video/mp4',
+    '.mp3': 'audio/mpeg',
+    '.webm': 'video/webm',
+}
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
