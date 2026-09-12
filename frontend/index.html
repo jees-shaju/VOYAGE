@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;0,800;1,400&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <script src="config.js"></script>
     <style>
         :root {
             --bg-base: #0a0c10;
@@ -3437,19 +3438,52 @@
 
         // ==========================================
         // ==========================================
-        // BACKEND URL - Update this or set in localStorage after Render deployment!
+        // BACKEND URL - Auto-resolves from config.js, localStorage, query param, or prompt!
         // ==========================================
-        const BACKEND_URL = (window.VOYAGE_BACKEND_URL || localStorage.getItem('VOYAGE_BACKEND_URL') || 'REPLACE_WITH_YOUR_RENDER_URL').replace(/\/+$/, '');
+        const urlParamBackend = new URLSearchParams(window.location.search).get('backend');
+        if (urlParamBackend) {
+            localStorage.setItem('VOYAGE_BACKEND_URL', urlParamBackend);
+        }
+
+        function getBackendUrl() {
+            const raw = (window.VOYAGE_BACKEND_URL || localStorage.getItem('VOYAGE_BACKEND_URL') || '').trim();
+            if (raw && !raw.includes('REPLACE_WITH_YOUR_')) {
+                return raw.replace(/\/+$/, '');
+            }
+            return '';
+        }
+
+        window.setBackendUrl = function(newUrl) {
+            if (newUrl === undefined) {
+                newUrl = prompt('Enter your Render Backend URL (e.g. https://voyage-backend.onrender.com):', getBackendUrl());
+            }
+            if (newUrl !== null) {
+                newUrl = newUrl.trim().replace(/\/+$/, '');
+                if (newUrl) {
+                    localStorage.setItem('VOYAGE_BACKEND_URL', newUrl);
+                    window.VOYAGE_BACKEND_URL = newUrl;
+                    alert('Backend URL saved: ' + newUrl);
+                    fetchLeaderboard();
+                }
+            }
+        };
+
+        let BACKEND_URL = getBackendUrl();
 
         // ==========================================
         // LEADERBOARD & API SUBMISSION
         // ==========================================
         async function fetchLeaderboard() {
-            if (!BACKEND_URL || BACKEND_URL.includes('REPLACE_WITH_YOUR_')) {
+            BACKEND_URL = getBackendUrl();
+            if (!BACKEND_URL) {
                 leaderboardBody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="empty-leaderboard" style="color: var(--neon-cyan);">
-                            Leaderboard standby. Configure Render Backend URL to view live rankings.
+                        <td colspan="3" class="empty-leaderboard" style="color: var(--neon-cyan); padding: 20px;">
+                            <div>Leaderboard Standby.</div>
+                            <div style="font-size: 0.8rem; margin: 8px 0; color: var(--text-secondary);">Connect your deployed Render backend to see live rankings.</div>
+                            <button onclick="setBackendUrl()" style="margin-top: 6px; padding: 6px 14px; background: rgba(0, 255, 204, 0.15); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem;">
+                                ⚙️ Connect Render Backend URL
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -3457,15 +3491,19 @@
             }
             try {
                 const response = await fetch(`${BACKEND_URL}/api/leaderboard/`);
-                if (!response.ok) throw new Error('Network error');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 renderLeaderboard(data);
             } catch (err) {
                 console.error('Failed to load leaderboard:', err);
                 leaderboardBody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="empty-leaderboard" style="color: var(--neon-red);">
-                            Failed to load leaderboard. Is the server running?
+                        <td colspan="3" class="empty-leaderboard" style="color: var(--neon-red); padding: 20px;">
+                            <div>Failed to load leaderboard (${err.message}).</div>
+                            <div style="font-size: 0.75rem; margin: 6px 0; color: var(--text-secondary);">Target: ${BACKEND_URL}</div>
+                            <button onclick="setBackendUrl()" style="margin-top: 6px; padding: 6px 14px; background: rgba(255, 51, 102, 0.15); border: 1px solid var(--neon-red); color: var(--neon-red); border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.75rem;">
+                                ⚙️ Change Backend URL
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -3506,6 +3544,13 @@
         }
 
         async function submitScore() {
+            BACKEND_URL = getBackendUrl();
+            if (!BACKEND_URL) {
+                alert('Please connect your Render backend URL before submitting your score.');
+                setBackendUrl();
+                return;
+            }
+
             const username = usernameInput.value.trim() || 'Anonymous Idler';
             const seconds = parseFloat(elapsedSeconds.toFixed(2));
 

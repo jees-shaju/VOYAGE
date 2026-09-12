@@ -7,3 +7,11 @@ __pycache__
 *.pyd
 db.sqlite3
 .DS_Store
+backend
+useless_project
+api
+requirements.txt
+Procfile
+railway.json
+render.yaml
+

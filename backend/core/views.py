@@ -18,6 +18,22 @@ def _ensure_tables():
 
 
 @require_GET
+def health_check(request):
+    """
+    GET /
+    Health check endpoint returning API status and available routes.
+    """
+    return JsonResponse({
+        'status': 'online',
+        'message': 'VOYAGE Backend API is running successfully on Render!',
+        'endpoints': {
+            'leaderboard': '/api/leaderboard/',
+            'submit_score': '/api/submit/',
+        }
+    })
+
+
+@require_GET
 def leaderboard_api(request):
     """
     GET /api/leaderboard/

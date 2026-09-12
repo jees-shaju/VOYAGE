@@ -2,9 +2,9 @@ services:
   - type: web
     name: voyage-backend
     runtime: python
-    buildCommand: "pip install -r requirements.txt && python backend/manage.py migrate --noinput"
-    startCommand: "cd backend && gunicorn nothing_game.wsgi:application"
-    healthCheckPath: "/api/leaderboard/"
+    buildCommand: "pip install -r requirements.txt && python backend/manage.py migrate --noinput && python backend/manage.py collectstatic --noinput"
+    startCommand: "cd backend && gunicorn nothing_game.wsgi:application --bind 0.0.0.0:$PORT"
+    healthCheckPath: "/health/"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
@@ -13,6 +13,6 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: ".onrender.com,localhost,127.0.0.1"
+        value: "*"
       - key: CORS_ALLOW_ALL_ORIGINS
         value: "True"
