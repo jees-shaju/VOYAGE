@@ -90,10 +90,12 @@ db_url = (
 if db_url:
     try:
         import dj_database_url
+        ssl_req = 'postgres' in db_url or 'postgresql' in db_url
         DATABASES['default'] = dj_database_url.config(
             default=db_url,
             conn_max_age=600,
-            conn_health_checks=True
+            conn_health_checks=True,
+            ssl_require=ssl_req
         )
     except ImportError:
         pass
