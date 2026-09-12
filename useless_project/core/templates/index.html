@@ -1900,8 +1900,7 @@
 
     <!-- BGM: ramaswami.mp3 — autoplay loop, hidden -->
     <audio id="bgmAudioEl" loop preload="auto" style="display:none">
-        <source src="/static/audio/ramaswami.mp3" type="audio/mpeg">
-        <source src="/static/ramaswami.mp3" type="audio/mpeg">
+        <source src="/static/music_nothing/ramaswami.mp3" type="audio/mpeg">
     </audio>
 
     <div class="container">
@@ -1999,8 +1998,6 @@
         <div class="scary-video-container">
             <video id="jumpscareVideo180" playsinline preload="auto">
                 <source src="/static/music_nothing/180secs.mp4" type="video/mp4">
-                <source src="/static/180secs.mp4" type="video/mp4">
-                <source src="/static/audio/180secs.mp4" type="video/mp4">
             </video>
         </div>
     </div>
@@ -2010,8 +2007,6 @@
         <div class="scary-video-container">
             <video id="jumpscareVideo300" playsinline preload="auto">
                 <source src="/static/music_nothing/random.mp4" type="video/mp4">
-                <source src="/static/random.mp4" type="video/mp4">
-                <source src="/static/audio/random.mp4" type="video/mp4">
             </video>
         </div>
     </div>
@@ -2021,8 +2016,6 @@
         <div class="scary-video-container">
             <video id="cookedPunishmentVideo" playsinline preload="auto">
                 <source src="/static/music_nothing/300sec.mp4" type="video/mp4">
-                <source src="/static/300sec.mp4" type="video/mp4">
-                <source src="/static/audio/300sec.mp4" type="video/mp4">
             </video>
         </div>
     </div>
@@ -2032,8 +2025,6 @@
     <div class="cooked-prank-overlay" id="cookedPrankOverlay330" aria-hidden="true">
         <video id="spammingMemeVideo" playsinline preload="auto" loop>
             <source src="/static/music_nothing/spamming_meme.mp4" type="video/mp4">
-            <source src="/static/spamming_meme.mp4" type="video/mp4">
-            <source src="/static/audio/spamming_meme.mp4" type="video/mp4">
         </video>
         <div class="cooked-glitch-scanlines"></div>
         <div class="cooked-glitch-tear-layer"></div>
@@ -2163,8 +2154,6 @@
             <div class="fail-video-box" id="failVideoBox">
                 <video id="failVideo" playsinline loop preload="auto">
                     <source src="/static/music_nothing/fail.mp4" type="video/mp4">
-                    <source src="/static/audio/fail.mp4" type="video/mp4">
-                    <source src="/static/fail.mp4" type="video/mp4">
                 </video>
             </div>
 
@@ -2198,13 +2187,6 @@
                         Dismiss &amp; Try Again
                     </button>
                 </div>
-    <!-- ENTRANCE BGM AUDIO -->
-    <audio id="bgmAudioEl" loop preload="auto">
-        <source src="/static/audio/ramaswami.mp3" type="audio/mpeg">
-        <source src="/static/music_nothing/ramaswami.mp3" type="audio/mpeg">
-        <source src="/static/ramaswami.mp3" type="audio/mpeg">
-    </audio>
-
     <script>
         // ==========================================
         // GAME STATE & CONFIGURATION
@@ -2243,7 +2225,7 @@
         // 1. Entrance BGM: ramaswami.mp3 — use the HTML <audio> element for better autoplay support
         let bgmAudio = document.getElementById('bgmAudioEl');
         if (!bgmAudio) {
-            bgmAudio = new Audio('/static/audio/ramaswami.mp3');
+            bgmAudio = new Audio('/static/music_nothing/ramaswami.mp3');
         }
         bgmAudio.loop = true;
         bgmAudio.volume = 0.6;
@@ -2259,7 +2241,7 @@
         }
 
         // 2. 60-Second Milestone: after_60sec.mp3
-        const sixtySecAudio = new Audio('/static/audio/after_60sec.mp3');
+        const sixtySecAudio = new Audio('/static/music_nothing/after_60sec.mp3');
         sixtySecAudio.volume = 0.85;
         let hasPlayed60SecAudio = false;
 
